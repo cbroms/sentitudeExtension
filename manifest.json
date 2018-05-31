@@ -1,0 +1,20 @@
+{
+    "name": "NLP Extension",
+    "version": "1.0",
+    "description": "A NLP extension that shows the sentiment of a paragraph",
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ],
+    "browser_action": {
+      "default_popup": "popup.html"
+    },
+    "permissions": ["tabs", "contextMenus"],
+    "web_accessible_resources": ["popup-script.js", "content.js"],
+    "manifest_version": 2
+}
