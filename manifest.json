@@ -1,7 +1,7 @@
 {
     "name": "NLP Extension",
     "version": "1.0",
-    "description": "A NLP extension that shows the sentiment of a paragraph",
+    "description": "A NLP extension that shows the sentiment of a page and selection",
     "background": {
         "scripts": ["background.js"]
     },

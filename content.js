@@ -11,7 +11,7 @@ var res = getPageContents();
 chrome.runtime.sendMessage({pageContents: res}, null);
 
 function getPageContents() {
-    var elementsContent = [], words = [];
+    let elementsContent = [], words = [];
     // loop through elements and separate string content from DOM object
     Array.from(document.getElementsByTagName("p")).forEach((element) => {
         elementsContent.push(String(element.innerText));
@@ -28,11 +28,11 @@ function getPageContents() {
     return words;
 }
 
-chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-    console.log(sender.tab ?
-        "from a content script:" + sender.tab.url :
-        "from the extension");
-    if (request.greeting == "hello")
-        sendResponse({farewell: "goodbye"});
+// get the sentiment value of a selected piece of text on the page 
+// from the background script and style appropriately 
+chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
+
+  console.log(msg.sentiment);
+  let elt = window.getSelection().anchorNode.parentElement;
+  elt.style.border = "1px solid black";
 });
