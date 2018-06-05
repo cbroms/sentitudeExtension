@@ -22,7 +22,7 @@ function getPageContents() {
         words = words.concat(element
             .toLowerCase()
             .replace(/\n/g, ' ')
-            .replace(/[.,\/#!$%\^&\*;:{}=_`\"~()]/g, '')
+            .replace(/[^\w\s]/g, '')
             .split(' '));
     });
     return words;
@@ -31,8 +31,13 @@ function getPageContents() {
 // get the sentiment value of a selected piece of text on the page 
 // from the background script and style appropriately 
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
-
-  console.log(msg.sentiment);
-  let elt = window.getSelection().anchorNode.parentElement;
-  elt.style.border = "1px solid black";
+    // style parent paragraph with border and background color according
+    // to sentiment value
+    let elt = window.getSelection().anchorNode.parentElement;
+    elt.style.border = "1px solid " + "hsl(" + msg.color + ",100%,50%)";
+    elt.style.borderRadius = "4px";
+    elt.style.backgroundColor = "hsla(" + msg.color + ",100%,50%, 0.3)";
+    // clear the selection
+    if (window.getSelection) {window.getSelection().removeAllRanges();}
+    else if (document.selection) {document.selection.empty();}
 });

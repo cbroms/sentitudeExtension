@@ -8,8 +8,18 @@
 </head>
 <body>
     <h2 id="sentiment-text">Scanning Page...</h2>
-    <h2 id="sentiment-selected-text">Select some text to get sentiment</h2>
-    <p id="selected-text"></p>
-    
+    <div class="slidecontainer">
+        <input type="range" min="-100" max="100" value="0" class="slider" id="page-range">
+  </div>
+  <p id="matched-words-scanned-good"></p>
+  <p id="matched-words-scanned-bad"></p>
+  <h2 id="sentiment-selected-text">Select some text to get sentiment</h2>
+  <div class="slidecontainer">
+        <input type="range" min="-100" max="100" value="0" class="slider" id="selection-range">
+  </div>
+  <p id="matched-words-selected-good"></p>
+  <p id="matched-words-selected-bad"></p>
+  <p id="selected-text"></p>
+
 </body>
 </html>

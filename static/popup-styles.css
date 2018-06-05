@@ -3,3 +3,26 @@ body {
     height: 300px;
     width: 250px;
 }
+
+.slidecontainer {
+    width: 100%; /* Width of the outside container */
+}
+
+.slider {
+    -webkit-appearance: none;  /* Override default CSS styles */
+    width: 100%; 
+    height: 25px;
+    background: -webkit-linear-gradient(left, #f00 0%,#ff0 50%, #0f0 100%);
+    outline: none; /* Remove outline */
+
+}
+
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    width: 20px; 
+    height: 25px; 
+   
+    border: 1px solid black; 
+    cursor: pointer; /* Cursor on hover */
+}
