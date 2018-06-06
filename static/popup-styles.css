@@ -1,7 +1,118 @@
 body {
-    background-color: white;
-    height: 300px;
-    width: 250px;
+    background-color: #F4F4F4;
+    height: 580px;
+    width: 300px;
+}
+
+h1 {
+    font-family: 'Chivo', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    margin-left: 5px;
+    color: #9C9C9C;
+}
+
+.panel {
+    width: 290px;
+    height: 320px;
+    background-color: #F3F3F3;
+    box-shadow: 1px 1px 20px -1px #9C9C9C;
+    margin-right: 10px;
+    margin-left: 5px;
+    margin-bottom: 35px;
+    margin-top: -18px;
+    border-radius: 5px;
+}
+
+.head {
+    height: 60px;
+    width: 290px;
+    background-color: #DFDFDF;
+    position: relative;
+    border-radius: 5px 5px 5px 5px;
+}
+
+.head-colored {
+    height: 60px;
+    width: 95px;
+    background-color: #E5FFBE;
+    border-radius: 5px 0px 0px 5px;
+}
+
+.value {
+    font-family: 'Chivo', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    font-style: italic;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.outer {
+    line-height: 60px;  
+}
+
+.inner {
+    line-height: 40px;  
+}
+.head-title {
+    height: 25px;
+    width: 195px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #9C9C9C;
+    border-radius: 0px 5px 0px 0px;
+}
+
+.head-inner {
+    height: 40px;
+    width: 290px;
+    background-color:  #DFDFDF;
+    border-radius: 5px 5px 0px 0px;
+    margin-top: 60px;
+    position: relative;
+}
+
+.head-inner-colored {
+    height: 40px;
+    width: 95px;
+    background-color: #E5FFBE;
+    border-radius: 5px 0px 0px 0px;
+}
+
+.head-title-text {
+    font-family: 'Chivo', sans-serif;
+    font-size: 10px;
+    color: #606060;
+    letter-spacing: 2px;
+    margin-left: 5px;
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+    top: 0;
+    left: 100px;
+}
+
+.triangle {
+    font-family: 'Chivo', sans-serif;
+    font-size: 15px;
+    color: #606060;
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.closed {
+    height: 60px;
+}
+
+.hidden {
+    display: none;
 }
 
 .slidecontainer {
