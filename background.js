@@ -41,7 +41,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     })
     // send result to content script
     chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {sentiment: resSelection.sentiment, color: resSelection.color}, null);  
+        chrome.tabs.sendMessage(tabs[0].id, {resSelection}, null);  
     });
 });
 
@@ -115,9 +115,10 @@ function analyzeTextSentimentAFINN111(text, type) {
 // available here: (https://github.com/CBR0MS/senticnet-JSON)
 // @requires isarray(text), isstring(type)
 function analyzeTextSentimentSenticNet5(text, type) {
-
+    // negators 
     let negs = {'cant': 1,'can\'t': 1,'dont': 1,'don\'t': 1,'doesnt': 1,'doesn\'t': 1,'not': 1,'non': 1,'wont': 1,'won\'t': 1,'isnt': 1,'isn\'t': 1};
-    let score = 0,
+    // variables for processing text
+    let polarityScore = 0, attentionScore = 0, pleasantnessScore = 0,
         positive = [],
         negative = [],
         mostPos = [],
@@ -133,34 +134,54 @@ function analyzeTextSentimentSenticNet5(text, type) {
         else objSentimentVal = sentic5Data[obj];
         // if there is a dictionary value, 
         if (objSentimentVal !== null && objSentimentVal !== undefined) {
-            // get the sentiment value
-            objSentimentVal = parseFloat(objSentimentVal[0]);
+            // senticNet5 array organized with [0: pleasantness_value, 1: attention_value, 2: polarity_value] 
+            // get the sentiment values from the SenticNet array 
+            let polarity_value = parseFloat(objSentimentVal[2]),
+                attention_value = parseFloat(objSentimentVal[1]),
+                pleasantness_value = parseFloat(objSentimentVal[0]);
             if (index > 0) {
-                // need to negate?
-                if (negs[text[index - 1]]) objSentimentVal = -objSentimentVal;
+                // if the previous word is in the list of negators, negate 
+                // the current word
+                if (negs[text[index - 1]]){
+                    polarity_value = -polarity_value;
+                    attention_value = -attention_value;
+                    pleasantness_value = -pleasantness_value;
+                } 
             }
             // add the word to either positive or negative array
-            if (objSentimentVal > 0) positive.push(obj);
-            else if (objSentimentVal < 0) negative.push(obj);
+            if (polarity_value > 0) positive.push(obj);
+            else if (polarity_value < 0) negative.push(obj);
             // if word is extreme, add it to mostPos or mostNeg array
-            if (objSentimentVal <= -0.8 ) mostNeg.push(obj);
-            else if (objSentimentVal >= 0.8) mostPos.push(obj);
+            if (polarity_value <= -0.8 ) mostNeg.push(obj);
+            else if (polarity_value >= 0.8) mostPos.push(obj);
 
             // add the sentiment to the overall score
-            score += objSentimentVal;
+            polarityScore += polarity_value;
+            attentionScore += attention_value;
+            pleasantnessScore += pleasantness_value;
         }
         else {
             // figure out context of an unknown word based off of the previous
             // word's sentiment
         }
     }
-    var sentimentRes = text.length > 0 ? score / text.length : 0
+    // calculate the sentiment values from the scores, scale them, and round to nearest integer
+    let sentimentRes = Math.round(mapValueToRange(text.length > 0 ? polarityScore / text.length : 0, -0.25, 0.5, -100, 100));
+    let attentionRes = Math.round(mapValueToRange(text.length > 0 ? attentionScore / text.length : 0, -0.4, 0.5, -100, 100));
+    let pleasantnessRes = Math.round(mapValueToRange(text.length > 0 ? pleasantnessScore / text.length : 0, -0.25, 0.5, -100, 100));
     // return JSON object with data 
     return {
         scanType: type,
         sentiment: sentimentRes,
-        sentimentMapped: mapValueToRange(sentimentRes, -0.3, 0.5, -100, 100),
-        color: mapValueToColor(sentimentRes),
+        sentimentMapped: sentimentRes,
+        attentionMapped: attentionRes,
+        pleasantnessMapped: pleasantnessRes,
+        sentimentDescriptor: getValueDescriptor(sentimentRes, "sentiment"),
+        attentionDescriptor: getValueDescriptor(attentionRes, "attention"),
+        pleasantnessDescriptor: getValueDescriptor(pleasantnessRes, "pleasantness"),
+        sentimentColor: mapValueToColor(text.length > 0 ? polarityScore / text.length : 0, -0.25, 0.5),
+        attentionColor: mapValueToColor(text.length > 0 ? attentionScore / text.length : 0, -0.4, 0.5),
+        pleasantnessColor: mapValueToColor(text.length > 0 ? pleasantnessScore / text.length : 0, -0.25, 0.5),
         positiveWords: positive,
         negativeWords: negative,
         mostPostitiveWords: mostPos,
@@ -174,6 +195,7 @@ function analyzeTextSentimentSenticNet5(text, type) {
 // do this because the senticnet dict has comninations like "a_lot_of", 
 // so given "a", we need to check if the next words are "lot" and "of", 
 // for instance. 
+// @requires isArray(text), numberOfWords <= 4 && numberOfWords > 0
 function makeWordCombinations(numberOfWords, index, text) {
     // loop through all possible combinations of words 
     for (let i = numberOfWords - 1; i >= 0; i--) {
@@ -197,17 +219,42 @@ function makeWordCombinations(numberOfWords, index, text) {
     return null;
 }
 
+// @requires scoreType == "sentiment" or "attention" or "pleasantness"
+// @requires isScaled(value) on [-100, 100]
+function getValueDescriptor(value, scoreType) {
+    // descriptors of the possible sentiment outcomes
+    let sentimentDescriptors = ["Very Negative", "Negative", "Slightly Negative", "Neutral", "Slightly Positive", "Positive", "Very Positive"];
+    let attentionDescriptors = ["Very Dry", "Dry", "Slightly Dry", "Neutral", "Slightly Exciting", "Exciting", "Very Exciting"];
+    let pleasantnessDescriptors = ["Very Unpleasant", "Unpleasant", "Slightly Unpleasant", "Neutral", "Slightly Pleasant", "Pleasant", "Very Pleasant"];
+    let outcomes = [];
+    // select the correct array based off the provided scoreType
+    if (scoreType == "sentiment") outcomes = sentimentDescriptors;
+    else if (scoreType == "attention") outcomes = attentionDescriptors;
+    else if (scoreType == "pleasantness") outcomes = pleasantnessDescriptors;
+    else {} // scoreType was not valid
+    // return string based on value
+    if (value >= 70) return outcomes[6];
+    else if (value >= 30) return outcomes[5];
+    else if (value >= 10) return outcomes[4];
+    else if (value <= -70) return outcomes[0];
+    else if (value <= -30) return outcomes[1];
+    else if (value <= -10) return outcomes[2];
+    else return outcomes[3];
+}
+
 // map a sentiment value to a specific color (HSV color space)
-function mapValueToColor(value) {
+// @requires rangeStart <= value <= rangeEnd
+function mapValueToColor(value, rangeStart, rangeEnd) {
     // change value to map between 0 and 1 
-    let input_end = 0.5, input_start = -0.3;
-    value = mapValueToRange(value, input_start, input_end, 0, 1);
+    value = mapValueToRange(value, rangeStart, rangeEnd, 0, 1);
     // max red and green saturations from HSV
     let maxRed = 0, maxGreen = 120; 
     // interpolate between red and green with value
     return value * maxGreen + (1 - value) * maxRed; 
 }
 
+// change the scale of a value based on a new range 
+// @requires startOld <= value <= endOld
 function mapValueToRange(value, startOld, endOld, startNew, endNew) {
     let res = startNew + ((endNew - startNew) / (endOld - startOld)) * (value - startOld);
     if (res > endNew) return endNew;

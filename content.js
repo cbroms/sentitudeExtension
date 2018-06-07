@@ -34,9 +34,17 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     // style parent paragraph with border and background color according
     // to sentiment value
     let elt = window.getSelection().anchorNode.parentElement;
-    elt.style.border = "1px solid " + "hsl(" + msg.color + ",100%,50%)";
+    console.log(msg);
+    elt.style.border = "1px solid " + "hsl(" + msg.resSelection.sentimentColor + ",100%,50%)";
     elt.style.borderRadius = "4px";
-    elt.style.backgroundColor = "hsla(" + msg.color + ",100%,50%, 0.3)";
+    elt.style.backgroundColor = "hsla(" + msg.resSelection.sentimentColor + ",100%,50%, 0.3)";
+    elt.classList.add("sentitude-tooltip");
+    let spanWithResults = document.createElement("SPAN");
+    spanWithResults.classList.add("sentitude-tooltiptext");
+    spanWithResults.innerHTML = "Sentiment: " + msg.resSelection.sentimentDescriptor + "</br>" +
+                                "Pleasantness: " + msg.resSelection.pleasantnessDescriptor + "</br>" +
+                                "Attention Value: " + msg.resSelection.attentionDescriptor;
+    elt.appendChild(spanWithResults);
     // clear the selection
     if (window.getSelection) {window.getSelection().removeAllRanges();}
     else if (document.selection) {document.selection.empty();}

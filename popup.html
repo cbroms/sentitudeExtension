@@ -3,33 +3,30 @@
 <head>
     <link href="https://fonts.googleapis.com/css?family=Chivo:300,400,700i|Source+Code+Pro" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="static/popup-styles.css">
-    <script type="text/javascript" src="senticnet5/senticnet5-smaller.json"></script>
-    
-
-    
 </head>
 <body>
 
     <h1 class="panel-head-title">OVERALL PAGE</h1>
     <div class="panel closed scanned" id="scanned-panel">
         <div class="head" id="scanned-head">
-            <div class="head-colored" id="scanned-head-colored">
-                <h2 class="value outer">+65</h2>
+            <p class="hidden centered-text" id="scanned-prompt">To analyze a page, reload it.</p>
+            <div class="head-colored" id="scanned-colored-sentiment">
+                <h2 class="value outer" id="scanned-sentiment">+65</h2>
             </div>
             <div class="head-title" id="scanned-head-stripe">
             </div>
-            <h2 class="head-title-text outer">SENTIMENT</h2>
-            <span class="triangle outer scanned">&#9660;</span>
+            <h2 class="head-title-text outer top-text" id="scanned-title">SENTIMENT</h2>
+            <span class="triangle outer scanned" id="scanned-triangle">&#9660;</span>
         </div>
         <div class="head-inner">
-            <div class="head-inner-colored">
-                <h2 class="value inner">+20</h2>
+            <div class="head-inner-colored" id="scanned-colored-pleasantness">
+                <h2 class="value inner" id="scanned-pleasantness">+20</h2>
             </div>
             <h2 class="head-title-text inner">PLEASANTNESS</h2>
         </div>
         <div class="head-inner">
-            <div class="head-inner-colored">
-                <h2 class="value inner">-4</h2>
+            <div class="head-inner-colored" id="scanned-colored-attention">
+                <h2 class="value inner" id="scanned-attention">-4</h2>
             </div>
             <h2 class="head-title-text inner">ATTENTION VALUE</h2>
         </div>
@@ -38,33 +35,28 @@
     <h1 class="panel-head-title">YOUR SELECTION</h1>
     <div class="panel closed selected" id="selected-panel">
         <div class="head" id="selected-head">
-            <div class="head-colored" id="selected-head-colored">
-                <h2 class="value outer">+65</h2>
+            <p class="hidden centered-text" id="selected-prompt">To analyze some text, select it and right click.</p>
+            <div class="head-colored" id="selected-colored-sentiment">
+                <h2 class="value outer" id="selected-sentiment">+65</h2>
             </div>
             <div class="head-title" id="selected-head-stripe">
             </div>
-            <h2 class="head-title-text outer">SENTIMENT</h2>
-            <span class="triangle outer selected">&#9660;</span>
+            <h2 class="head-title-text outer top-text" id="selected-title">SENTIMENT</h2>
+            <span class="triangle outer selected" id="selected-triangle">&#9660;</span>
         </div>
         <div class="head-inner">
-            <div class="head-inner-colored">
-                <h2 class="value inner">+20</h2>
+            <div class="head-inner-colored" id="selected-colored-pleasantness">
+                <h2 class="value inner" id="selected-pleasantness">+20</h2>
             </div>
             <h2 class="head-title-text inner">PLEASANTNESS</h2>
         </div>
         <div class="head-inner">
-            <div class="head-inner-colored">
-                <h2 class="value inner">-4</h2>
+            <div class="head-inner-colored" id="selected-colored-attention">
+                <h2 class="value inner" id="selected-attention">-4</h2>
             </div>
             <h2 class="head-title-text inner">ATTENTION VALUE</h2>
         </div>
     </div>
-
-
-
-
-
-
 
 <script type="text/javascript" src="static/popup-script.js"></script>
 </body>

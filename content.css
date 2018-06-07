@@ -1,0 +1,48 @@
+.sentitude-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.sentitude-tooltip .sentitude-tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1000;
+}
+
+.sentitude-tooltip .sentitude-tooltiptext {
+    width: 250px;
+    top: 100%;
+    left: 50%; 
+    margin-left: -125px;
+}
+
+.sentitude-tooltip .sentitude-tooltiptext::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%; 
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+}
+
+.sentitude-tooltip:hover .sentitude-tooltiptext {
+    visibility: visible;
+}
+
+.sentitude-tooltip .sentitude-tooltiptext {
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.sentitude-tooltip:hover .sentitude-tooltiptext {
+    opacity: 1;
+    transition: opacity 1s;
+}

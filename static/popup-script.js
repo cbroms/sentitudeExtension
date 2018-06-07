@@ -6,6 +6,16 @@
 
     */
 
+
+// initial set up of page- hide dropdowns and color fields and text, show prompts
+Array.from(document.getElementsByClassName("head-colored")).forEach((element) => element.classList.toggle("hidden"));
+Array.from(document.getElementsByClassName("head-title")).forEach((element) => element.classList.toggle("hidden"));
+Array.from(document.getElementsByClassName("top-text")).forEach((element) => element.classList.toggle("hidden"));
+Array.from(document.getElementsByClassName("triangle")).forEach((element) => element.classList.toggle("hidden"));
+Array.from(document.getElementsByClassName("head-inner")).forEach((element) => element.classList.toggle("hidden"));
+document.getElementById("scanned-prompt").classList.toggle("hidden");
+document.getElementById("selected-prompt").classList.toggle("hidden");
+
 // create a port to connect background and popup scripts 
 var port = chrome.extension.connect({
   name: "background script <-> popup script"
@@ -15,29 +25,65 @@ var port = chrome.extension.connect({
 port.onMessage.addListener((msg) => {
     if (msg.scanType === "pageScan") {
         // scan type was a page scan 
-        document.getElementById("sentiment-text").innerHTML = "Page Sentiment: " + String(Math.round(msg.sentimentMapped));  
-        document.getElementById("sentiment-text").style.color = "hsl(" + msg.color + ",100%,50%)";
+        // if the panel is closed, open it
+        if (!document.getElementById("scanned-prompt").classList.contains("hidden")){
+            document.getElementById("scanned-prompt").classList.toggle("hidden");
+            document.getElementById("scanned-colored-sentiment").classList.toggle("hidden");
+            document.getElementById("scanned-head-stripe").classList.toggle("hidden");
+            document.getElementById("scanned-title").classList.toggle("hidden");
+            document.getElementById("scanned-triangle").classList.toggle("hidden");
+        }
+        // auto open the scanned panel  
+        document.getElementById("scanned-triangle").click();
+        // add sentiment data and style with appropriate color 
+        document.getElementById("scanned-sentiment").innerHTML =  (msg.sentimentMapped > 0 ? "+" : "") + String(msg.sentimentMapped);
+        document.getElementById("scanned-sentiment").style.color = "hsl(" + msg.sentimentColor + ", 80%, 50%)";
+        document.getElementById("scanned-colored-sentiment").style.backgroundColor =  "hsl(" + msg.sentimentColor + ", 100%, 90%)";
+        // add pleasantness data and style with appropriate color 
+        document.getElementById("scanned-pleasantness").innerHTML =  (msg.pleasantnessMapped > 0 ? "+" : "") + String(msg.pleasantnessMapped);
+        document.getElementById("scanned-pleasantness").style.color = "hsl(" + msg.pleasantnessColor + ", 80%, 50%)";
+        document.getElementById("scanned-colored-pleasantness").style.backgroundColor =  "hsl(" + msg.pleasantnessColor + ", 100%, 90%)";
+        // add attention data and style with appropriate color 
+        document.getElementById("scanned-attention").innerHTML =  (msg.attentionMapped > 0 ? "+" : "") + String(msg.attentionMapped);
+        document.getElementById("scanned-attention").style.color = "hsl(" + msg.attentionColor + ", 80%, 50%)";
+        document.getElementById("scanned-colored-attention").style.backgroundColor =  "hsl(" + msg.attentionColor + ", 100%, 90%)";
+        
+        /*
         document.getElementById("page-range").value = msg.sentimentMapped;
         document.getElementById("matched-words-scanned-good").innerHTML = msg.positiveWords;
         document.getElementById("matched-words-scanned-bad").innerHTML = msg.negativeWords;
+        */
     } 
     else if (msg.scanType === "rightClick") {
         // scan type was a user selection
-        document.getElementById("sentiment-selected-text").innerHTML = "Selection Sentiment: " + String(Math.round(msg.sentimentMapped));
-        document.getElementById("sentiment-selected-text").style.color = "hsl(" + msg.color + ",100%,50%)";
-        document.getElementById("selection-range").value = msg.sentimentMapped;
-        document.getElementById("matched-words-selected-good").innerHTML = msg.positiveWords;
-        document.getElementById("matched-words-selected-bad").innerHTML = msg.negativeWords;
+        // if the panel is closed, open it
+        if (!document.getElementById("selected-prompt").classList.contains("hidden")){
+            document.getElementById("selected-prompt").classList.toggle("hidden");
+            document.getElementById("selected-colored-sentiment").classList.toggle("hidden");
+            document.getElementById("selected-head-stripe").classList.toggle("hidden");
+            document.getElementById("selected-title").classList.toggle("hidden");
+            document.getElementById("selected-triangle").classList.toggle("hidden");
+        }
+        // auto open the selection panel  
+        document.getElementById("selected-triangle").click();
+
+        // add sentiment data and style with appropriate color 
+        document.getElementById("selected-sentiment").innerHTML =  (msg.sentimentMapped > 0 ? "+" : "") + String(msg.sentimentMapped);
+        document.getElementById("selected-sentiment").style.color = "hsl(" + msg.sentimentColor + ", 80%, 50%)";
+        document.getElementById("selected-colored-sentiment").style.backgroundColor =  "hsl(" + msg.sentimentColor + ", 100%, 90%)";
+        // add pleasantness data and style with appropriate color 
+        document.getElementById("selected-pleasantness").innerHTML =  (msg.pleasantnessMapped > 0 ? "+" : "") + String(msg.pleasantnessMapped);
+        document.getElementById("selected-pleasantness").style.color = "hsl(" + msg.pleasantnessColor + ", 80%, 50%)";
+        document.getElementById("selected-colored-pleasantness").style.backgroundColor =  "hsl(" + msg.pleasantnessColor + ", 100%, 90%)";
+        // add attention data and style with appropriate color 
+        document.getElementById("selected-attention").innerHTML =  (msg.attentionMapped > 0 ? "+" : "") + String(msg.attentionMapped);
+        document.getElementById("selected-attention").style.color = "hsl(" + msg.attentionColor + ", 80%, 50%)";
+        document.getElementById("selected-colored-attention").style.backgroundColor =  "hsl(" + msg.attentionColor + ", 100%, 90%)";
+        /*
         document.getElementById("selected-text").innerHTML = chrome.extension.getBackgroundPage().selection;
+        */
     }
 });
-
-
-if (document.getElementById("scanned-panel").classList.contains("closed")) {
-    Array.from(document.getElementsByClassName("head-inner")).forEach((element) => {
-        element.classList.toggle("hidden");
-    });
-}
 
 // add click listener to triangles for opening and closing 
 Array.from(document.getElementsByClassName("triangle")).forEach((element) => {
