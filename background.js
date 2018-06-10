@@ -1,13 +1,13 @@
-/*
-    Background script for nlp extention
-    
-    gets the text strings from page or selection and analyzes 
-    the sentiment of the words. 
-
-    NOTE: jsdoc tags aren't used exactly as they should be in 
-    this code. 
-
-    */
+/**
+*    Background script for nlp extention
+*    
+*    gets the text strings from page or selection and analyzes 
+*    the sentiment of the words. 
+*
+*    NOTE: jsdoc tags aren't used exactly as they should be in 
+*    this code. 
+*
+*/
 
 // Set up context menu (right click to run on highlighted text)
 chrome.runtime.onInstalled.addListener(() => {
@@ -24,10 +24,10 @@ var resSelection;
 // a user's selected text 
 var selection;
 
-/* 
-    add click event to get selected text, clean it, analyze, 
-    and send JSON object result to popup menu, and to content script
-    to display on the page
+/** 
+*    add click event to get selected text, clean it, analyze, 
+*    and send JSON object result to popup menu, and to content script
+*    to display on the page
 */
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     // set get selection text for use by popup
@@ -51,9 +51,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     });
 });
 
-/*
-    get page text from content script (pre-cleaned), analyze, 
-    and send JSON object to popup menu
+/**
+*    get page text from content script (pre-cleaned), analyze, 
+*    and send JSON object to popup menu
 */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // analyze 
@@ -66,11 +66,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     })
 });
 
-/* 
-    analyze an array of words and return a JSON object with data
-    dictionary of words and their sentiment values where -5 <= value <= 5, sourced from  
-    AFINN-111 (http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010)
-    and Sentiment of Emojis (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144296)
+/** 
+*    analyze an array of words and return a JSON object with data
+*    dictionary of words and their sentiment values where -5 <= value <= 5, sourced from  
+*    AFINN-111 (http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010)
+*    and Sentiment of Emojis (http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144296)
 */
 function analyzeTextSentimentAFINN111(text, type) {
 
@@ -116,17 +116,17 @@ function analyzeTextSentimentAFINN111(text, type) {
     };
 }
 
-/* 
-    analyze an array of words and return a JSON object with data
-    dictionary of words and their sentiment values where -1 <= value <= 1, sourced from  
-    SenticNet5 (http://sentic.net/downloads/) SenticNet5 Compiled to JSON with script 
-    available here: (https://github.com/CBR0MS/senticnet-JSON)
-    @param {Array} text - an array of cleaned lowercase words
-    @param {string} type - scan type 
-    @return {Object} - object with sentiment data and organized arrays
-    @requires type == "rightClick" or "pageScan"
-    @requires sentic5Data from background-load-objects.js
-    @requires negs from background-load-objects.js
+/** 
+*    analyze an array of words and return a JSON object with data
+*    dictionary of words and their sentiment values where -1 <= value <= 1, sourced from  
+*    SenticNet5 (http://sentic.net/downloads/) SenticNet5 Compiled to JSON with script 
+*    available here: (https://github.com/CBR0MS/senticnet-JSON)
+*    @param {Array} text - an array of cleaned lowercase words
+*    @param {string} type - scan type 
+*    @return {Object} - object with sentiment data and organized arrays
+*    @requires type == "rightClick" or "pageScan"
+*    @requires sentic5Data from background-load-objects.js
+*    @requires negs from background-load-objects.js
 */
  function analyzeTextSentimentSenticNet5(text, type) {
     // variables for processing text
@@ -214,18 +214,18 @@ function analyzeTextSentimentAFINN111(text, type) {
     };
 }
 
-/* 
-    given an index, get the next numberOfWords in an array and see if the 
-    combination is in the senticnet dictionary. We need to do this because
-    the senticnet dict has comninations like "a_lot_of", so given "a", we 
-    need to check if the next words are "lot" and "of", for instance. 
-    @param {integer} numberOfWords - the number of words to combine
-    @param {integer} index - the current index in text
-    @param {Array} text - an array of cleaned lowercase words
-    @return {(object | null)} senticNet5 object or null if no such object exists
-    @requires numberOfWords <= 4 && numberOfWords > 0
-    @requires index >= 0 && index < text.length
-    @requires sentic5Data from background-load-objects.js
+/** 
+*    given an index, get the next numberOfWords in an array and see if the 
+*    combination is in the senticnet dictionary. We need to do this because
+*    the senticnet dict has comninations like "a_lot_of", so given "a", we 
+*    need to check if the next words are "lot" and "of", for instance. 
+*    @param {integer} numberOfWords - the number of words to combine
+*    @param {integer} index - the current index in text
+*    @param {Array} text - an array of cleaned lowercase words
+*    @return {(object | null)} senticNet5 object or null if no such object exists
+*    @requires numberOfWords <= 4 && numberOfWords > 0
+*    @requires index >= 0 && index < text.length
+*    @requires sentic5Data from background-load-objects.js
 */
  function makeWordCombinations(numberOfWords, index, text) {
     // loop through all possible combinations of words 
@@ -250,13 +250,13 @@ function analyzeTextSentimentAFINN111(text, type) {
     return null;
 }
 
-/*   
-    tries to make word combinations, and if it cannot, singluarizes the word
-    and trys again 
-    @param {string} obj - a word
-    @param {integer} index - the current index in text
-    @param {Array} text - an array of cleaned lowercase words
-    @requires index >= 0 && index < text.length
+/**   
+*    tries to make word combinations, and if it cannot, singluarizes the word
+*    and trys again 
+*    @param {string} obj - a word
+*    @param {integer} index - the current index in text
+*    @param {Array} text - an array of cleaned lowercase words
+*    @requires index >= 0 && index < text.length
 */
 function trySingularThenPlural(obj, index, text) {
     let objSentimentVal = null;
@@ -284,16 +284,16 @@ function trySingularThenPlural(obj, index, text) {
     return objSentimentVal;
 }
 
-/* 
-    returns the descriptor for a given value and score type 
-    @param {float} value
-    @param {string} scoreType
-    @return {string} descriptor of value
-    @requires scoreType == "sentiment" or "attention" or "pleasantness"
-    @requires value is scaled on [-100, 100]
-    @requires sentimentDescriptors from background-load-objects.js
-    @requires attentionDescriptors from background-load-objects.js
-    @requires pleasantnessDescriptors from background-load-objects.js
+/**
+*    returns the descriptor for a given value and score type 
+*    @param {float} value
+*    @param {string} scoreType
+*    @return {string} descriptor of value
+*    @requires scoreType == "sentiment" or "attention" or "pleasantness"
+*    @requires value is scaled on [-100, 100]
+*    @requires sentimentDescriptors from background-load-objects.js
+*    @requires attentionDescriptors from background-load-objects.js
+*    @requires pleasantnessDescriptors from background-load-objects.js
 */
  function getValueDescriptor(value, scoreType) {
 
@@ -304,21 +304,21 @@ function trySingularThenPlural(obj, index, text) {
     else if (scoreType == "pleasantness") outcomes = pleasantnessDescriptors;
     else {} // scoreType was not valid
     // return string based on value
-if (value >= 70) return outcomes[6];
-else if (value >= 30) return outcomes[5];
-else if (value >= 10) return outcomes[4];
-else if (value <= -70) return outcomes[0];
-else if (value <= -30) return outcomes[1];
-else if (value <= -10) return outcomes[2];
-else return outcomes[3];
+    if (value >= 70) return outcomes[6];
+    else if (value >= 30) return outcomes[5];
+    else if (value >= 10) return outcomes[4];
+    else if (value <= -70) return outcomes[0];
+    else if (value <= -30) return outcomes[1];
+    else if (value <= -10) return outcomes[2];
+    else return outcomes[3];
 }
 
-/* 
-    map a sentiment value to a specific color (HSL color space)
-    @param {float} value 
-    @param {float} rangeStart, rangeEnd - current range value is in
-    @return {float} - HSL hue value (between 0 and 120)
-    @requires rangeStart <= value <= rangeEnd
+/** 
+*    map a sentiment value to a specific color (HSL color space)
+*    @param {float} value 
+*    @param {float} rangeStart, rangeEnd - current range value is in
+*    @return {float} - HSL hue value (between 0 and 120)
+*    @requires rangeStart <= value <= rangeEnd
 */
  function mapValueToColor(value, rangeStart, rangeEnd) {
     // change value to map between 0 and 1 
@@ -329,13 +329,13 @@ else return outcomes[3];
     return value * maxGreen + (1 - value) * maxRed; 
 }
 
-/* 
-    change the scale of a value based on a new range
-    @param {float} value
-    @param {float} startOld, endOld - current value range
-    @param {float} startNew, endNew - new value range
-    @return {float} - adjusted value to new range
-    @requires startOld <= value <= endOld
+/** 
+*    change the scale of a value based on a new range
+*    @param {float} value
+*    @param {float} startOld, endOld - current value range
+*   @param {float} startNew, endNew - new value range
+*    @return {float} - adjusted value to new range
+*    @requires startOld <= value <= endOld
 */
  function mapValueToRange(value, startOld, endOld, startNew, endNew) {
     let res = startNew + ((endNew - startNew) / (endOld - startOld)) * (value - startOld);
@@ -344,15 +344,15 @@ else return outcomes[3];
     return res;
 }
 
-/* 
-    returns a pluralized version of the inputWord
-    Definitely needs more work, there are many more irregulars
-    to be added - see (https://github.com/blakeembrey/pluralize/blob/master/pluralize.js)
-    @param {string} inputWord
-    @return {string} - inputWord pluralized
-    @requires plural from background-load-objects.js 
-    @requires irregular from background-load-objects.js 
-    @requires uncountable from background-load-objects.js 
+/** 
+*    returns a pluralized version of the inputWord
+*    Definitely needs more work, there are many more irregulars
+*    to be added - see (https://github.com/blakeembrey/pluralize/blob/master/pluralize.js)
+*    @param {string} inputWord
+*    @return {string} - inputWord pluralized
+*   @requires plural from background-load-objects.js 
+*    @requires irregular from background-load-objects.js 
+*    @requires uncountable from background-load-objects.js 
 */
  function pluralize(inputWord) {
     // if singular and plural are the same, return 
@@ -370,13 +370,13 @@ else return outcomes[3];
     return inputWord;
 }
 
-/*
-    returns a singularized version of the inputWord
-    @param {string} inputWord
-    @return {string} - inputWord singularized
-    @requires singluar from background-load-objects.js 
-    @requires irregular from background-load-objects.js 
-    @requires uncountable from background-load-objects.js 
+/**
+*    returns a singularized version of the inputWord
+*    @param {string} inputWord
+*    @return {string} - inputWord singularized
+*    @requires singluar from background-load-objects.js 
+*    @requires irregular from background-load-objects.js 
+*    @requires uncountable from background-load-objects.js 
 */
  function singularize(inputWord) {
     // if singular and plural are the same, return 
