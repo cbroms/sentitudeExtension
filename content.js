@@ -41,9 +41,9 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     elt.classList.add("sentitude-tooltip");
     let spanWithResults = document.createElement("SPAN");
     spanWithResults.classList.add("sentitude-tooltiptext");
-    spanWithResults.innerHTML = "Sentiment: " + msg.resSelection.sentimentDescriptor + "</br>" +
-                                "Pleasantness: " + msg.resSelection.pleasantnessDescriptor + "</br>" +
-                                "Attention Value: " + msg.resSelection.attentionDescriptor;
+    spanWithResults.innerHTML = "Sentiment: " + msg.resSelection.descriptorSentiment + "</br>" +
+                                "Pleasantness: " + msg.resSelection.descriptorPleasantness + "</br>" +
+                                "Attention Value: " + msg.resSelection.descriptorAttention;
     elt.appendChild(spanWithResults);
     // clear the selection
     if (window.getSelection) {window.getSelection().removeAllRanges();}
