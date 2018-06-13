@@ -8,7 +8,7 @@
 // get the page's text content
 var res = getPageContents();
 // send text content to background script
-chrome.runtime.sendMessage({pageContents: res}, null);
+chrome.runtime.sendMessage({pageContents: res, pageName: window.location.href}, null);
 
 function getPageContents() {
     let elementsContent = [], words = [];
@@ -19,11 +19,7 @@ function getPageContents() {
     // loop through string content and separate into individual words 
     elementsContent.forEach((element) => {
         // clean the text of specials, convert to lower, and split into words 
-        words = words.concat(element
-            .toLowerCase()
-            .replace(/\n/g, ' ')
-            .replace(/[^\w\s]/g, '')
-            .split(' '));
+        words = words.concat(element.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s]/g, '').split(' '));
     });
     return words;
 }

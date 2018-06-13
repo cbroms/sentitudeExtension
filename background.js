@@ -33,17 +33,13 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     // set get selection text for use by popup
     selection = info.selectionText;
     // clean the text of specials, convert to lower, and split into words
-    let cleaned = info.selectionText
-    .toLowerCase()
-    .replace(/\n/g, ' ')
-    .replace(/[^\w\s]/g, '')
-    .split(' ');
+    let cleaned = info.selectionText.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s]/g, '').split(' ');
     // analyze 
     //resSelection = analyzeTextSentimentAFINN111(cleaned, "rightClick");
     resSelection = analyzeTextSentimentSenticNet5(cleaned, "rightClick");
     // send result to popup 
     chrome.extension.onConnect.addListener((port) => {
-        port.postMessage(resSelection);
+        port.postMessage({data: resSelection, title: selection});
     })
     // send result to content script
     chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
@@ -62,7 +58,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("SenticNet5: "+ resOverall.sentiment);
     // send result to popup 
     chrome.extension.onConnect.addListener((port) => {
-        port.postMessage(resOverall);
+        port.postMessage({data: resOverall, title: request.pageName});
     })
 });
 
@@ -131,19 +127,55 @@ function analyzeTextSentimentAFINN111(text, type) {
  function analyzeTextSentimentSenticNet5(text, type) {
     // variables for processing text
     let polarityScore = 0, attentionScore = 0, pleasantnessScore = 0,
-    positive = [], negative = [],
-    mostPos = [], mostNeg = [],
-    exciting = [], dry = [],
-    pleasant = [], unpleasant = [],
+    positive = [], negative = [], mostPos = [], mostNeg = [],
+    exciting = [], dry = [], pleasant = [], unpleasant = [],
     unknown = [];
 
     // loop through words in the text
     for (let index = 0; index < text.length; index++) {
         // get word and its sentiment value from the dictionary 
         let obj = text[index], objSentimentVal = null;
+
         // make all possible word combinations and look up in senticnet5 dictionary
-        objSentimentVal = trySingularThenPlural(obj, index, text);
-       
+        // if no combinations possible, singularize the word and try again
+        (function () { 
+            // make word combinations depending on current index (so we don't
+            // have an out of bounds exception on the last indices)
+            let chooseCombination = () => {
+                 if (index <= text.length - 4) objSentimentVal = makeWordCombinations(4, index, text);
+                else if (index <= text.length - 3) objSentimentVal = makeWordCombinations(3, index, text);
+                else if (index <= text.length - 2) objSentimentVal = makeWordCombinations(2, index, text);
+                else objSentimentVal = makeWordCombinations(1, index, text);
+            }
+            chooseCombination();
+           
+            // if we have nothing, 
+            if (objSentimentVal == undefined || objSentimentVal == null) {
+                // try singlularizing the word 
+                text[index] = singularize(obj);
+                // retry making word combinations 
+                chooseCombination();
+                
+                if (objSentimentVal != null && objSentimentVal != undefined) {
+                    // we have a match with a singular version of the word!
+                    console.log("matched: " + text[index]);
+                }
+                else {
+                    // if there are still no matches, then the word is either 
+                    // not in the dict, or we need to change up the grammar 
+
+                    // still need to implement Porter-Stemmer alg to lemmatize 
+                    // (https://tartarus.org/martin/PorterStemmer/)
+                    // might use offical implementation:
+                    // (https://tartarus.org/martin/PorterStemmer/js.txt)
+                }
+                // return the word to its previous state so we don't 
+                // have to reparse the page
+                text[index] = obj;
+            }
+        }());
+        // now, if there is a dictionary value, we have it 
+    
         // if there is a dictionary value, 
         if (objSentimentVal !== null && objSentimentVal !== undefined) {
             // senticNet5 array organized with [0: pleasantness_value, 1: attention_value, 2: polarity_value] 
@@ -152,10 +184,8 @@ function analyzeTextSentimentAFINN111(text, type) {
                 attention_value = parseFloat(objSentimentVal[1]),
                 pleasantness_value = parseFloat(objSentimentVal[0]);
             if (index > 0) {
-                // if the previous word is in the list of negators, negate 
-                // the current word
+                // if the previous word is in the list of negators, negate the current word
                 if (negs[text[index - 1]]){
-                    console.log("negator: " + negs[text[index - 1]] + "word: " + text[index]);
                     polarity_value = -polarity_value;
                     attention_value = -attention_value;
                     pleasantness_value = -pleasantness_value;
@@ -248,40 +278,6 @@ function analyzeTextSentimentAFINN111(text, type) {
         }
     }
     return null;
-}
-
-/**   
-*    tries to make word combinations, and if it cannot, singluarizes the word
-*    and trys again 
-*    @param {string} obj - a word
-*    @param {integer} index - the current index in text
-*    @param {Array} text - an array of cleaned lowercase words
-*    @requires index >= 0 && index < text.length
-*/
-function trySingularThenPlural(obj, index, text) {
-    let objSentimentVal = null;
-    // make word combinations depending on current index
-    if (index <= text.length - 4) objSentimentVal = makeWordCombinations(4, index, text);
-    else if (index <= text.length - 3) objSentimentVal = makeWordCombinations(3, index, text);
-    else if (index <= text.length - 2) objSentimentVal = makeWordCombinations(2, index, text);
-    else objSentimentVal = makeWordCombinations(1, index, text);
-    // if we have nothing, 
-    if (objSentimentVal == undefined || objSentimentVal == null) {
-        // try singlularizing the word 
-        text[index] = singularize(obj);
-        // retry making word combinations 
-        if (index <= text.length - 4) objSentimentVal = makeWordCombinations(4, index, text);
-        else if (index <= text.length - 3) objSentimentVal = makeWordCombinations(3, index, text);
-        else if (index <= text.length - 2) objSentimentVal = makeWordCombinations(2, index, text);
-        else objSentimentVal = makeWordCombinations(1, index, text);
-        // return the word to its previous state 
-        
-        if (objSentimentVal != null && objSentimentVal != undefined) {
-            console.log("matched: " + text[index]);
-        }
-        text[index] = obj;
-    }
-    return objSentimentVal;
 }
 
 /**

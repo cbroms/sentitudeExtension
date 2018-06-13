@@ -23,6 +23,11 @@ var port = chrome.extension.connect({
 
 // listen for messages from the background script 
 port.onMessage.addListener((msg) => {
+    console.log(msg);
+    let title = msg.title;
+    console.log(title);
+    msg = msg.data;
+
     if (msg.scanType === "pageScan") {
         // scan type was a page scan 
         // if the panel is closed, open it
