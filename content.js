@@ -8,7 +8,7 @@
 // get the page's text content
 var res = getPageContents();
 // send text content to background script
-chrome.runtime.sendMessage({pageContents: res, pageName: window.location.href}, null);
+chrome.runtime.sendMessage({pageContents: res, pageName: document.title}, null);
 
 function getPageContents() {
     let elementsContent = [], words = [];

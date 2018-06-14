@@ -6,7 +6,6 @@
 
     */
 
-
 // initial set up of page- hide dropdowns and color fields and text, show prompts
 Array.from(document.getElementsByClassName("head-colored")).forEach((element) => element.classList.toggle("hidden"));
 Array.from(document.getElementsByClassName("head-title")).forEach((element) => element.classList.toggle("hidden"));
@@ -24,9 +23,13 @@ var port = chrome.extension.connect({
 // listen for messages from the background script 
 port.onMessage.addListener((msg) => {
     console.log(msg);
-    let title = msg.title;
-    console.log(title);
+    let ogTitle = msg.title, title = msg.title;
     msg = msg.data;
+    // if the title is too long, shorten it and add ellipsis
+    if (title.length > 38) {
+        title = title.substr(0, 32);
+        title = title + " . . .";
+    }
 
     if (msg.scanType === "pageScan") {
         // scan type was a page scan 
@@ -43,15 +46,21 @@ port.onMessage.addListener((msg) => {
         // add sentiment data and style with appropriate color 
         document.getElementById("scanned-sentiment").innerHTML =  (msg.sentimentMapped > 0 ? "+" : "") + String(msg.sentimentMapped);
         document.getElementById("scanned-sentiment").style.color = "hsl(" + msg.sentimentColor + ", 80%, 50%)";
-        document.getElementById("scanned-colored-sentiment").style.backgroundColor =  "hsl(" + msg.sentimentColor + ", 100%, 90%)";
+        document.getElementById("scanned-colored-sentiment").style.background =  "linear-gradient(to right, " + "hsl(" + msg.sentimentColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("scanned-sentiment-desc").innerHTML = msg.descriptorSentiment;
         // add pleasantness data and style with appropriate color 
         document.getElementById("scanned-pleasantness").innerHTML =  (msg.pleasantnessMapped > 0 ? "+" : "") + String(msg.pleasantnessMapped);
         document.getElementById("scanned-pleasantness").style.color = "hsl(" + msg.pleasantnessColor + ", 80%, 50%)";
-        document.getElementById("scanned-colored-pleasantness").style.backgroundColor =  "hsl(" + msg.pleasantnessColor + ", 100%, 90%)";
+        document.getElementById("scanned-colored-pleasantness").style.background =  "linear-gradient(to right, " + "hsl(" + msg.pleasantnessColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("scanned-pleasantness-desc").innerHTML = msg.descriptorPleasantness;
         // add attention data and style with appropriate color 
         document.getElementById("scanned-attention").innerHTML =  (msg.attentionMapped > 0 ? "+" : "") + String(msg.attentionMapped);
         document.getElementById("scanned-attention").style.color = "hsl(" + msg.attentionColor + ", 80%, 50%)";
-        document.getElementById("scanned-colored-attention").style.backgroundColor =  "hsl(" + msg.attentionColor + ", 100%, 90%)";
+        document.getElementById("scanned-colored-attention").style.background =  "linear-gradient(to right, " + "hsl(" + msg.attentionColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("scanned-attention-desc").innerHTML = msg.descriptorAttention;
+        // add the title 
+        document.getElementById("scanned-source").innerHTML = title;
+        document.getElementById("scanned-source").title = ogTitle;
         
         /*
         document.getElementById("page-range").value = msg.sentimentMapped;
@@ -61,6 +70,8 @@ port.onMessage.addListener((msg) => {
     } 
     else if (msg.scanType === "rightClick") {
         // scan type was a user selection
+        // add quotes to title to make it more like selected text
+        title = "\"" + title + "\"";
         // if the panel is closed, open it
         if (!document.getElementById("selected-prompt").classList.contains("hidden")){
             document.getElementById("selected-prompt").classList.toggle("hidden");
@@ -75,15 +86,21 @@ port.onMessage.addListener((msg) => {
         // add sentiment data and style with appropriate color 
         document.getElementById("selected-sentiment").innerHTML =  (msg.sentimentMapped > 0 ? "+" : "") + String(msg.sentimentMapped);
         document.getElementById("selected-sentiment").style.color = "hsl(" + msg.sentimentColor + ", 80%, 50%)";
-        document.getElementById("selected-colored-sentiment").style.backgroundColor =  "hsl(" + msg.sentimentColor + ", 100%, 90%)";
+        document.getElementById("selected-colored-sentiment").style.background =  "linear-gradient(to right, " + "hsl(" + msg.sentimentColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("selected-sentiment-desc").innerHTML = msg.descriptorSentiment;
         // add pleasantness data and style with appropriate color 
         document.getElementById("selected-pleasantness").innerHTML =  (msg.pleasantnessMapped > 0 ? "+" : "") + String(msg.pleasantnessMapped);
         document.getElementById("selected-pleasantness").style.color = "hsl(" + msg.pleasantnessColor + ", 80%, 50%)";
-        document.getElementById("selected-colored-pleasantness").style.backgroundColor =  "hsl(" + msg.pleasantnessColor + ", 100%, 90%)";
+        document.getElementById("selected-colored-pleasantness").style.background =  "linear-gradient(to right, " + "hsl(" + msg.pleasantnessColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("selected-pleasantness-desc").innerHTML = msg.descriptorPleasantness;
         // add attention data and style with appropriate color 
         document.getElementById("selected-attention").innerHTML =  (msg.attentionMapped > 0 ? "+" : "") + String(msg.attentionMapped);
         document.getElementById("selected-attention").style.color = "hsl(" + msg.attentionColor + ", 80%, 50%)";
-        document.getElementById("selected-colored-attention").style.backgroundColor =  "hsl(" + msg.attentionColor + ", 100%, 90%)";
+        document.getElementById("selected-colored-attention").style.background =  "linear-gradient(to right, " + "hsl(" + msg.attentionColor + ", 100%, 90%)" + ", rgba(0, 0, 0, 0))";
+        document.getElementById("selected-attention-desc").innerHTML = msg.descriptorAttention;
+        // add the title
+        document.getElementById("selected-source").innerHTML = title;
+        document.getElementById("selected-source").title = ogTitle;
         /*
         document.getElementById("selected-text").innerHTML = chrome.extension.getBackgroundPage().selection;
         */

@@ -1,11 +1,11 @@
 body {
+    font-family: 'Chivo', sans-serif;
     background-color: #F4F4F4;
     height: 580px;
     width: 300px;
 }
 
 h1 {
-    font-family: 'Chivo', sans-serif;
     font-size: 13px;
     font-weight: 300;
     letter-spacing: 4px;
@@ -15,7 +15,7 @@ h1 {
 
 .panel {
     width: 290px;
-    height: 380px;
+    height: 290px;
     background-color: #F3F3F3;
     box-shadow: 1px 1px 20px -1px #9C9C9C;
     margin-right: 10px;
@@ -25,7 +25,7 @@ h1 {
 }
 
 .head {
-    height: 85px;
+    height: 130px;
     width: 290px;
     background-color: #DFDFDF;
     position: relative;
@@ -33,28 +33,27 @@ h1 {
 }
 
 .head-colored {
-    height: 60px;
+    height: 80px;
     width: 95px;
     background-color: #E5FFBE;
     border-radius: 5px 0px 0px 5px;
     position: absolute;
-    top: 25px;
+    top: 50px;
 }
 
 .value {
-    font-family: 'Chivo', sans-serif;
     font-size: 30px;
     font-weight: 700;
     font-style: italic;
     text-align: center;
     vertical-align: middle;
     margin: 0;
-    line-height: 60px; 
+    line-height: 80px; 
 }
 
 
 .head-title {
-    height: 25px;
+    height: 50px;
     width: 290px;
     position: absolute;
     top: 0;
@@ -64,67 +63,98 @@ h1 {
 }
 
 .head-inner {
-    height: 60px;
+    height: 80px;
     width: 290px;
     background-color:  #DFDFDF;
     border-radius: 5px 5px 0px 0px;
-    margin-top: 60px;
     position: relative;
 }
 
 .head-inner-colored {
-    height: 60px;
+    height: 80px;
     width: 95px;
     background-color: #E5FFBE;
-    border-radius: 5px 0px 0px 0px;
 }
 
 .head-title-text {
-    font-family: 'Chivo', sans-serif;
     font-size: 12px;
-    color: #606060;
-    letter-spacing: 2px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: #9C9C9C;
     margin-left: 5px;
     text-align: center;
     vertical-align: middle;
     position: absolute;
-    top: 15px;
+    top: 2px;
     left: 100px;
 }
 
+.descriptor {
+    font-size: 18px;
+    font-style: italic;
+    color: #606060;
+    top: 20px;
+    left: 105px;
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+}
+
+.desc-top {
+    top: 70px;
+}
+
+.source-info {
+    font-size: 12px;
+    color: #DFDFDF;
+    padding-left: 15px;
+    padding-top: 5px;
+
+}
+
 .centered-text {
-    font-family: 'Chivo', sans-serif;
     font-size: 12px;
     color: #606060;
     text-align: center;
     vertical-align: middle;
-    line-height: 85px;
+    line-height: 130px;
 }
 
 .top-text {
-    top: 40px;
+    top: 55px;
+}
+
+.lighter {
+    background-color: #EAEAEA;
 }
 
 .triangle {
-    font-family: 'Chivo', sans-serif;
     font-size: 15px;
     color: #606060;
     text-align: center;
     vertical-align: middle;
     position: absolute;
-    top: 45px;
-    right: 20px;
+    top: 15px;
+    right: 5px;
     cursor: pointer;
     height: 30px;
     width: 50px; 
 }
 
 .closed {
-    height: 85px;
+    height: 130px;
 }
 
 .hidden {
     display: none;
+}
+
+.bottom-rl {
+    border-radius: 0px 5px 5px 0px;
+}
+
+.bottom-l {
+    border-radius: 0px 0px 0px 5px;
 }
 
 .slidecontainer {
