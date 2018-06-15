@@ -9,7 +9,9 @@
     <h1 class="panel-head-title">OVERALL PAGE</h1>
     <div class="panel closed scanned" id="scanned-panel">
         <div class="head lighter" id="scanned-head">
-            <p class="hidden centered-text" id="scanned-prompt">To analyze a page, reload it.</p>
+            <div class="hidden center-multiline" id="scanned-prompt">
+                <p class="padded">To analyze a page, reload it.</p>
+            </div>
             <div class="head-colored" id="scanned-colored-sentiment">
                 <h2 class="value outer" id="scanned-sentiment" title="/&plusmn;100"></h2>
             </div>
@@ -39,7 +41,9 @@
     <h1 class="panel-head-title">YOUR SELECTION</h1>
     <div class="panel closed selected" id="selected-panel">
         <div class="head lighter" id="selected-head">
-            <p class="hidden centered-text" id="selected-prompt">To analyze some text, select it and right click.</p>
+            <div class="hidden center-multiline" id="selected-prompt">
+                <p class="padded">To analyze some text, select it, right click and pick "Get sentiment of selection."</p>
+            </div>
             <div class="head-colored" id="selected-colored-sentiment">
                 <h2 class="value outer" id="selected-sentiment" title="/&plusmn;100"></h2>
             </div>
@@ -63,6 +67,19 @@
             </div>
             <h2 class="head-title-text inner">ATTENTION VALUE</h2>
             <p class="descriptor" id="selected-attention-desc"></p>
+        </div>
+    </div>
+
+    <h1 class="panel-head-title">OPTIONS</h1>
+    <div class="button-wrapper">
+        <div class="button">
+            <div class="center-multiline" id="select-ph"><p>Select Paragraphs</p></div>
+        </div>
+        <div class="button">
+            <div class="center-multiline" id="analyze-pg"><p>Analyze this Page</p></div>
+        </div>
+        <div class="button">
+            <div class="center-multiline" id="help"><p>Help &amp; About</p></div>
         </div>
     </div>
 

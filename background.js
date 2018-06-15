@@ -15,7 +15,7 @@ chrome.runtime.onInstalled.addListener(() => {
     "title": "Get sentiment of selection", 
     "contexts": ["selection"],
     "id": "context" + "selection"
-});  
+    });  
 });
 // the page's overall sentiment 
 var resOverall; 
@@ -41,9 +41,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.extension.onConnect.addListener((port) => {
         port.postMessage({data: resSelection, title: selection});
     })
-    // send result to content script
+    // send result to content script to color selection
     chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {resSelection}, null);  
+        chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
     });
 });
 
@@ -52,15 +52,54 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 *    and send JSON object to popup menu
 */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // analyze 
-    //var resOverall1 = analyzeTextSentimentAFINN111(request.pageContents, "pageScan");
-    resOverall = analyzeTextSentimentSenticNet5(request.pageContents, "pageScan");
-    console.log("SenticNet5: "+ resOverall.sentiment);
-    // send result to popup 
-    chrome.extension.onConnect.addListener((port) => {
-        port.postMessage({data: resOverall, title: request.pageName});
-    })
+    
+    if (request.type == "pageScan") {
+        // message contains a page scan 
+        //var resOverall1 = analyzeTextSentimentAFINN111(request.pageContents, "pageScan");
+        resOverall = analyzeTextSentimentSenticNet5(request.pageContents, "pageScan");
+        // send result to popup
+        chrome.extension.onConnect.addListener((port) => {
+            port.postMessage({data: resOverall, title: request.pageName});
+        })
+    }
+    else if (request.type == "selectionClick") {
+        // message contains a paragraph click
+        resSelection = analyzeTextSentimentSenticNet5(request.clickContents, "rightClick");
+        // send result to popup as a rightClick style object
+        chrome.extension.onConnect.addListener((port) => {
+            port.postMessage({data: resSelection, title: request.title});
+        });
+        // send result to content script to color selected paragraph
+        chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+        });
+    } 
 });
+
+/**
+*   listen for messages from popup from button presses
+*/
+chrome.extension.onConnect.addListener((port) => {
+      port.onMessage.addListener((msg) => {
+           if (msg == "SELECT-PH") {
+            // send message to content script to make all paragraphs clickable
+            chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, {type: "SELECT-PH"}, null);  
+            });
+            // force the popup window to close
+            port.postMessage("CLOSE_POPUP");
+           }
+           else if (msg == "ANALYZE-PG") {
+                // reload the current page to tigger sentiment analysis
+                chrome.tabs.getSelected(null, (tab) => {
+                    let code = 'window.location.reload();';
+                    chrome.tabs.executeScript(tab.id, {code: code});
+                });
+                // force the popup window to close
+                port.postMessage("CLOSE_POPUP");
+           }
+      });
+ })
 
 /** 
 *    analyze an array of words and return a JSON object with data

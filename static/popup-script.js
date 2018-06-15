@@ -20,9 +20,27 @@ var port = chrome.extension.connect({
   name: "background script <-> popup script"
 });
 
+// on button press, post message to background
+document.getElementById("select-ph").addEventListener('click', (event) => {
+    port.postMessage("SELECT-PH");
+});
+
+document.getElementById("analyze-pg").addEventListener('click', (event) => {
+    port.postMessage("ANALYZE-PG");
+});
+
 // listen for messages from the background script 
 port.onMessage.addListener((msg) => {
     console.log(msg);
+
+    if (msg == "CLOSE_POPUP") {
+        // command to close
+        window.close();
+    }
+    else {
+        // scan object recieved 
+    
+
     let ogTitle = msg.title, title = msg.title;
     msg = msg.data;
     // if the title is too long, shorten it and add ellipsis
@@ -105,6 +123,7 @@ port.onMessage.addListener((msg) => {
         document.getElementById("selected-text").innerHTML = chrome.extension.getBackgroundPage().selection;
         */
     }
+}
 });
 
 // add click listener to triangles for opening and closing 
