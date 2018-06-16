@@ -28,11 +28,13 @@ function getPageContents() {
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     // command from background script to make paragraphs clickable
     if (msg.type == "SELECT-PH") {
-        Array.from(document.getElementsByTagName("p")).forEach((element) => {
+        let loadParagraphs = () => {
+            Array.from(document.getElementsByTagName("p")).forEach((element) => {
             // @TODO: add a visual indication that the paragraph is clickable 
             //var new_element = element.cloneNode(true);
             //old_element.parentNode.replaceChild(new_element, element);
             element.style.cursor = "pointer";
+            element.title = "Click to analyze sentiment";
 
             // when the paragraph is clicked,
             element.addEventListener('click', (event) => {
@@ -42,6 +44,12 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
                 chrome.runtime.sendMessage({clickContents: res, type: "selectionClick", title: element.innerHTML}, null);
             });
         });
+        }
+        loadParagraphs();
+
+        // infinitely reload the paragraphs to accomodate for dynamically-loaded content
+        setInterval(() => {loadParagraphs()}, 2500);
+        
     } 
     else if (msg.type == "COLOR-PH") {
     // style parent paragraph with border and background color according
