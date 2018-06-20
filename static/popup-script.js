@@ -29,6 +29,11 @@ document.getElementById("analyze-pg").addEventListener('click', (event) => {
     port.postMessage("ANALYZE-PG");
 });
 
+document.getElementById("help").addEventListener('click', (event) => {
+    chrome.runtime.openOptionsPage();
+    //window.open(chrome.runtime.getURL('data.html'));
+});
+
 // listen for messages from the background script 
 port.onMessage.addListener((msg) => {
     console.log(msg);

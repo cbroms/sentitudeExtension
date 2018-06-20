@@ -18,11 +18,33 @@ chrome.runtime.onInstalled.addListener(() => {
     });  
 });
 // the page's overall sentiment 
-var resOverall; 
+let resOverall; 
 // a user's selection sentiment
-var resSelection;
+let resSelection;
 // a user's selected text 
-var selection;
+let selection;
+
+let getSentimentAverage = (data, type) => {
+    let afinnData = analyzeTextSentimentAFINN111(data, type);
+    let senticData = analyzeTextSentimentSenticNet5(data, type);
+    let res = senticData;
+    // map the afinn data to a new range
+    afinnData.sentiment = mapValueToRange(afinnData.sentiment, -0.7, 0.7, -100, 100);
+    // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
+    let weightedMean = (afinnData.sentiment * 0.5 + senticData.sentimentMapped * 0.5) / (1);
+    res.sentimentMapped = Math.round(weightedMean);
+    // replace the old descriptor
+    res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
+    // combine word lists from AFINN and SenticNet
+    res.wordsPositive = res.wordsPositive.concat(afinnData.wordsPositive);
+    res.wordsNegative = res.wordsNegative.concat(afinnData.wordsNegative);
+    res.wordsMostPositive = res.wordsMostPositive.concat(afinnData.wordsMostPositive);
+    res.wordsMostNegative = res.wordsMostNegative.concat(afinnData.wordsMostNegative);
+    res.OGafinn = afinnData.sentiment;
+    res.OGsentic = senticData.sentimentMapped;
+    console.log(res);
+    return res;
+};
 
 /** 
 *    add click event to get selected text, clean it, analyze, 
@@ -35,8 +57,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     // clean the text of specials, convert to lower, and split into words
     let cleaned = info.selectionText.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s]/g, '').split(' ');
     // analyze 
-    //resSelection = analyzeTextSentimentAFINN111(cleaned, "rightClick");
-    resSelection = analyzeTextSentimentSenticNet5(cleaned, "rightClick");
+    resSelection = getSentimentAverage(cleaned, "rightClick");
     // send result to popup 
     chrome.extension.onConnect.addListener((port) => {
         port.postMessage({data: resSelection, title: selection});
@@ -55,8 +76,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     if (request.type == "pageScan") {
         // message contains a page scan 
-        //var resOverall1 = analyzeTextSentimentAFINN111(request.pageContents, "pageScan");
-        resOverall = analyzeTextSentimentSenticNet5(request.pageContents, "pageScan");
+        resOverall = getSentimentAverage(request.pageContents, "pageScan");
         // send result to popup
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resOverall, title: request.pageName});
@@ -64,7 +84,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     else if (request.type == "selectionClick") {
         // message contains a paragraph click
-        resSelection = analyzeTextSentimentSenticNet5(request.clickContents, "rightClick");
+        resSelection = getSentimentAverage(request.clickContents, "rightClick");
         // send result to popup as a rightClick style object
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resSelection, title: request.title});
@@ -143,10 +163,10 @@ function analyzeTextSentimentAFINN111(text, type) {
     return {
         scanType: type,
         sentiment: text.length > 0 ? score / text.length : 0,
-        postiveWords: positive,
-        negativeWords: negative,
-        mostPostitiveWords: mostPos,
-        mostNegativeWords: mostNeg,
+        wordsPositive: positive,
+        wordsNegative: negative,
+        wordsMostPostitive: mostPos,
+        wordsMostNegative: mostNeg,
         words: text
     };
 }
@@ -166,7 +186,7 @@ function analyzeTextSentimentAFINN111(text, type) {
  function analyzeTextSentimentSenticNet5(text, type) {
     // variables for processing text
     let polarityScore = 0, attentionScore = 0, pleasantnessScore = 0,
-    positive = [], negative = [], mostPos = [], mostNeg = [],
+    positive = [''], negative = [''], mostPos = [''], mostNeg = [''],
     exciting = [], dry = [], pleasant = [], unpleasant = [],
     unknown = [];
 
@@ -181,7 +201,7 @@ function analyzeTextSentimentAFINN111(text, type) {
             // make word combinations depending on current index (so we don't
             // have an out of bounds exception on the last indices)
             let chooseCombination = () => {
-                 if (index <= text.length - 4) objSentimentVal = makeWordCombinations(4, index, text);
+                if (index <= text.length - 4) objSentimentVal = makeWordCombinations(4, index, text);
                 else if (index <= text.length - 3) objSentimentVal = makeWordCombinations(3, index, text);
                 else if (index <= text.length - 2) objSentimentVal = makeWordCombinations(2, index, text);
                 else objSentimentVal = makeWordCombinations(1, index, text);
@@ -272,7 +292,7 @@ function analyzeTextSentimentAFINN111(text, type) {
         pleasantnessColor: mapValueToColor(text.length > 0 ? pleasantnessScore / text.length : 0, -0.65, 0.75),
         wordsPositive: positive,
         wordsNegative: negative,
-        wordsMostPostitive: mostPos,
+        wordsMostPositive: mostPos,
         wordsMostNegative: mostNeg,
         wordsPleasant: pleasant,
         wordsUnpleasant: unpleasant,
@@ -368,7 +388,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    change the scale of a value based on a new range
 *    @param {float} value
 *    @param {float} startOld, endOld - current value range
-*   @param {float} startNew, endNew - new value range
+*    @param {float} startNew, endNew - new value range
 *    @return {float} - adjusted value to new range
 *    @requires startOld <= value <= endOld
 */
@@ -385,7 +405,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    to be added - see (https://github.com/blakeembrey/pluralize/blob/master/pluralize.js)
 *    @param {string} inputWord
 *    @return {string} - inputWord pluralized
-*   @requires plural from background-load-objects.js 
+*    @requires plural from background-load-objects.js 
 *    @requires irregular from background-load-objects.js 
 *    @requires uncountable from background-load-objects.js 
 */

@@ -52,21 +52,22 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
         
     } 
     else if (msg.type == "COLOR-PH") {
-    // style parent paragraph with border and background color according
-    // to sentiment value
-    let elt = window.getSelection().anchorNode.parentElement;
-    elt.style.border = "1px solid " + "hsl(" + msg.data.sentimentColor + ",100%,50%)";
-    elt.style.borderRadius = "4px";
-    elt.style.backgroundColor = "hsla(" + msg.data.sentimentColor + ",100%,50%, 0.3)";
-    elt.classList.add("sentitude-tooltip");
-    let spanWithResults = document.createElement("SPAN");
-    spanWithResults.classList.add("sentitude-tooltiptext");
-    spanWithResults.innerHTML = "Sentiment: " + msg.data.descriptorSentiment + "</br>" +
-    "Pleasantness: " + msg.data.descriptorPleasantness + "</br>" +
-    "Attention Value: " + msg.data.descriptorAttention;
-    elt.appendChild(spanWithResults);
-    // clear the selection
-    if (window.getSelection) window.getSelection().removeAllRanges();
-    else if (document.selection) document.selection.empty();
-}
+        // style parent paragraph with border and background color according
+        // to sentiment value
+        console.log("coloring");
+        let elt = window.getSelection().anchorNode.parentElement;
+        elt.style.border = "1px solid " + "hsl(" + msg.data.sentimentColor + ", 100%, 50%)";
+        elt.style.borderRadius = "4px";
+        elt.style.backgroundColor = "hsla(" + msg.data.sentimentColor + ",100%,50%, 0.3)";
+        elt.classList.add("sentitude-tooltip");
+        let spanWithResults = document.createElement("SPAN");
+        spanWithResults.classList.add("sentitude-tooltiptext");
+        spanWithResults.innerHTML = "Sentiment: " + msg.data.descriptorSentiment + "</br>" +
+        "Pleasantness: " + msg.data.descriptorPleasantness + "</br>" +
+        "Attention Value: " + msg.data.descriptorAttention;
+        elt.appendChild(spanWithResults);
+        // clear the selection
+        if (window.getSelection) window.getSelection().removeAllRanges();
+        else if (document.selection) document.selection.empty();
+    }
 });
