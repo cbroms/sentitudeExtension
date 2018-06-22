@@ -5,6 +5,8 @@
 }
 
 .sentitude-tooltip .sentitude-tooltiptext {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
     visibility: hidden;
     width: 120px;
     background-color: black;
@@ -40,10 +42,8 @@
 
 .sentitude-tooltip .sentitude-tooltiptext {
     opacity: 0;
-    transition: opacity 1s;
 }
 
 .sentitude-tooltip:hover .sentitude-tooltiptext {
     opacity: 1;
-    transition: opacity 1s;
 }
