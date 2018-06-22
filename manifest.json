@@ -3,7 +3,7 @@
     "version": "1.0",
     "description": "A NLP extension that shows the sentiment of a page and selection",
     "background": {
-        "scripts": ["background-load-objects.js", "background.js"]
+        "scripts": ["background-load-objects.js", "porter-stemmer.js", "background.js"]
     },
     "content_scripts": [
         {
