@@ -5,6 +5,7 @@
     to background script
     */
 
+// if a paragraph contains these words, ignore them (probably left over from an adblocker)
 var bannedWords = ["Advertisement", "ADVERTISEMENT", "AD", "ad", "ADVERTISING", "Advertising", "Advert", "ADVERT"];
 // get the page's text content
 var res = getPageContents();
@@ -66,7 +67,6 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
         loadParagraphs();
         // infinitely reload the paragraphs to accomodate for dynamically-loaded content
         setInterval(() => {loadParagraphs()}, 5000);
-        
     } 
     else if (msg.type == "COLOR-PH") {
         // style parent paragraph with border and background color according
