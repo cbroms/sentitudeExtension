@@ -159,7 +159,7 @@ function togglePanel(className, auto, event) {
     // get the parent panel 
     let el1 = document.getElementsByClassName(className)[0];
     // change the triangle to go up or down
-    if ( el1.classList.contains("closed")) {
+    if (el1.classList.contains("closed")) {
         event.target.innerHTML = "";
         event.target.appendChild(document.createTextNode(decodeHTMLEntity("&#9650;")));
     } else {

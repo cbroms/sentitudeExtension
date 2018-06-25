@@ -12,11 +12,12 @@
             "css": ["content.css"]
         }
     ],
-    "options_page": "options.html",
+    "options_page": "static/options.html",
     "browser_action": {
-      "default_popup": "popup.html"
+      "default_popup": "static/popup.html"
     },
     "permissions": [
+        "storage",
         "tabs", 
         "contextMenus",
         "http://*/",

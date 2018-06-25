@@ -9,6 +9,27 @@
 *
 */
 
+
+// the page's overall sentiment 
+let resOverall; 
+// a user's selection sentiment
+let resSelection;
+// a user's selected text 
+let selection;
+
+// save default values to storage on first time setup
+chrome.runtime.onInstalled.addListener((details) => {
+    chrome.storage.sync.set({DEFAULT_AFINN_WEIGHT: 0.4}); 
+    chrome.storage.sync.set({DEFAULT_SENTIC_WEIGHT: 0.6}); 
+    chrome.storage.sync.set({AFINN_WEIGHT: 0.4}); 
+    chrome.storage.sync.set({SENTIC_WEIGHT: 0.6});
+    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
+    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: false});
+    chrome.storage.sync.set({COLOR_PAGES: false});
+    chrome.storage.sync.set({COLOR_SELECTION: true}); 
+});
+
+
 // Set up context menu (right click to run on highlighted text)
 chrome.runtime.onInstalled.addListener(() => {
   let id = chrome.contextMenus.create({
@@ -17,13 +38,10 @@ chrome.runtime.onInstalled.addListener(() => {
     "id": "context" + "selection"
     });  
 });
-// the page's overall sentiment 
-let resOverall; 
-// a user's selection sentiment
-let resSelection;
-// a user's selected text 
-let selection;
 
+/**
+*   get the average of AFINN and SenticNet computed sentiments 
+*/
 let getSentimentAverage = (data, type) => {
     let afinnData = analyzeTextSentimentAFINN111(data, type);
     let senticData = analyzeTextSentimentSenticNet5(data, type);
@@ -31,7 +49,8 @@ let getSentimentAverage = (data, type) => {
     // map the afinn data to a new range
     afinnData.sentiment = mapValueToRange(afinnData.sentiment, -0.7, 0.7, -100, 100);
     // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
-    let weightedMean = (afinnData.sentiment * 0.5 + senticData.sentimentMapped * 0.5) / (1);
+    // giving a slight bias to SenticNet 5 result for now 
+    let weightedMean = (afinnData.sentiment * 0.4 + senticData.sentimentMapped * 0.6) / (1);
     res.sentimentMapped = Math.round(weightedMean);
     // replace the old descriptor
     res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
@@ -42,7 +61,6 @@ let getSentimentAverage = (data, type) => {
     res.wordsMostNegative = res.wordsMostNegative.concat(afinnData.wordsMostNegative);
     res.OGafinn = afinnData.sentiment;
     res.OGsentic = senticData.sentimentMapped;
-    console.log(res);
     return res;
 };
 

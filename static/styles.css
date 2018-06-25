@@ -1,8 +1,6 @@
 body {
     font-family: 'Chivo', sans-serif;
     background-color: #F4F4F4;
-    height: 600px;
-    width: 300px;
 }
 
 h1 {
@@ -11,6 +9,98 @@ h1 {
     letter-spacing: 4px;
     margin-left: 5px;
     color: #9C9C9C;
+}
+
+.smaller-body {
+    height: 600px;
+    width: 300px;
+}
+
+.larger-body {
+    width: 800px;
+    height: 700px;
+    box-shadow: 1px 1px 20px -1px #9C9C9C;
+    background-color: #F3F3F3;
+    border-radius: 5px;
+    margin: 50px auto 0 auto;
+    position: relative;
+}
+
+.section-heading {
+    text-transform: uppercase;
+    font-weight: 300;
+    font-style: initial;
+    font-size: 25px;
+    padding-top: 20px;
+    margin-bottom: 35px;
+    font-weight: 300;
+    letter-spacing: 4px;
+}
+
+.section-options {
+    margin-left: 300px;
+    margin-top: -20px;
+    margin-bottom: 40px;
+}
+
+.section {
+    margin-left: 25px;
+    margin-right: 25px;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 700;
+}
+
+.sub-title {
+    max-width: 250px;
+    height: 30px !important;
+}
+
+.sentitude-tooltiptext {
+    font-size: 12px !important;
+    font-style: initial;
+    font-weight: 500;
+    font-family: 'Chivo', sans-serif !important;
+}
+
+input[type="text"] {
+    width: 35px;
+}
+
+.tabbed {
+    float: right;
+    margin-top: 3px;
+    margin-right: 250px;
+}
+
+.deactivated {
+    opacity: 0.5 !important;
+}
+
+.tabbed-smaller {
+    margin-top: 3px;
+    margin-right: -100px;
+    float: right;
+}
+
+input[type="checkbox"] {
+    margin-top: 7px;
+    margin-bottom: 7px;
+    cursor: pointer;
+}
+
+label {
+    font-style: initial;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.footer {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 11px;
+    opacity: 0.7;
 }
 
 .panel {
