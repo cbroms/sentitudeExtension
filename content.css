@@ -9,13 +9,14 @@
     font-size: 14px;
     visibility: hidden;
     width: 120px;
-    background-color: black;
+    background-color: #1c1c1c;
     color: white;
     text-align: center;
     padding: 5px 0;
-    border-radius: 6px;
+    border-radius: 5px;
     position: absolute;
     z-index: 1000000;
+    box-shadow: 1px 1px 20px -1px #9C9C9C;
 }
 
 .sentitude-tooltip .sentitude-tooltiptext {
@@ -34,7 +35,7 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent transparent black transparent;
+    border-color: transparent transparent #1c1c1c transparent;
 }
 
 .sentitude-tooltip:hover .sentitude-tooltiptext {

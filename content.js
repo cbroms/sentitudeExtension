@@ -29,7 +29,14 @@ function getPageContents() {
     return words;
 }
 
-// commands from the background script
+/**
+* Commands from the background script 
+* Possible command types- 
+*   "SELECT-PH": make all paragraphs clickable and scan for sentiment on click
+*   "COLOR-PH": style a selection or paragraph with a color based on sentiment value 
+*   "COLOR-WD-PG": style individual words on a page based off their polarity values
+*   "COLOR-WD-PH": style individual words in a selection based off their polarity vals 
+*/
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     
     if (msg.type == "SELECT-PH") {
@@ -72,6 +79,10 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
         // style parent paragraph with border and background color according
         // to sentiment value
         let elt = window.getSelection().anchorNode.parentElement;
+        // fix for bug where parentElement isn't the paragraph above
+        if (elt.tagName.toLowerCase() != "p") {
+            elt = elt.parentElement;
+        }
         // add class to signify text has been scanned
         elt.classList.add("sentitude-scanned");
         // style with color 
@@ -85,13 +96,14 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
         spanWithResults.innerHTML = "Sentiment: " + msg.data.descriptorSentiment + "</br>" +
         "Pleasantness: " + msg.data.descriptorPleasantness + "</br>" +
         "Attention Value: " + msg.data.descriptorAttention;
+        
         // add tooltip to selected paragraph
         elt.appendChild(spanWithResults);
         // clear the selection
         if (window.getSelection) window.getSelection().removeAllRanges();
         else if (document.selection) document.selection.empty();
     }
-    else if (msg.type == "COLOR-WD") {
+    else if (msg.type == "COLOR-WD-PG") {
         // color individual recognized words based off their polarity values 
         let position = 0;
         // get paragraph elements 
@@ -101,7 +113,6 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
             let contentSplit = [], wordsInCombination = 0;
             // style of element 
             let style = window.getComputedStyle(element);
-
             // ensure the element is visible and not and advertisement 
             if (!bannedWords.includes(content) && style.display !== 'none' && element.offsetHeight > 0) {
                 // split into individual words
@@ -144,5 +155,65 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
                 element.innerHTML = contentSplit;
             }
         });
+    }
+    else if (msg.type == "COLOR-WD-PH") {
+        // color individual recognized words based off their polarity values 
+        let element = null;
+        // check if the selection is an entire paragraph, not just a sentence in it 
+        Array.from(document.getElementsByTagName("p")).forEach((elt) => {
+            if (window.getSelection() == elt.innerText){
+                element = elt;
+            }
+        });
+        let position = 0;
+        // if the selection is a whole paragraph, 
+        if (element != null) {
+         // get content of paragraph
+            let content = String(element.innerText);
+            let contentSplit = [], wordsInCombination = 0;
+            // style of element 
+            let style = window.getComputedStyle(element);
+            // ensure the element is visible and not and advertisement 
+            if (!bannedWords.includes(content) && style.display !== 'none' && element.offsetHeight > 0) {
+                // split into individual words
+                contentSplit = contentSplit.concat(content.replace(/\n/g, ' ').split(' '));
+
+                // loop through split words 
+                contentSplit.forEach((word, i) => {
+                    // if we don't need to skip a word 
+                    if (wordsInCombination <= 0){
+                        // if the word was matched in the scanned data 
+                        if (msg.data.wordsOrdered[position] !== null) {
+                            // get number of words in combination- words have been joined with '_'
+                            wordsInCombination = (msg.data.wordsOrdered[position].word.match(/_/g)||[]).length;
+                            // if there are more than one words matched in a combination,
+                            // don't do anything on the next few loops; decrement below
+                            // otherwise, continue looping 
+                            let fullString = word;
+                            // join the next matched words together 
+                            for (let j = i + 1; j <= i + wordsInCombination; j++) {
+                                fullString += (" " + contentSplit[j]);
+                                contentSplit[j] = "";
+                            }
+                            // add a span element with style and title 
+                            contentSplit[i] = "<span style=\"background-color: " + 
+                                                "hsla(" + msg.data.wordsOrdered[position].color + 
+                                                ", 100%, 50%, 0.3); border-radius: 5px;\" title=\"Matched: \'" + 
+                                                msg.data.wordsOrdered[position].word + 
+                                                "\'&#13;Sentiment: " + Math.round(msg.data.wordsOrdered[position].val[2] * 100) + 
+                                                "\">" + fullString + "</span>";
+                        } 
+                        // if the word wasn't matched, leave it alone
+                    } else {
+                        // we needed to skip a word, decrement
+                        wordsInCombination--;
+                    }
+                    // move to next scanned word
+                    position++;
+                });
+                contentSplit = contentSplit.join(' ');
+                element.innerHTML = contentSplit;
+            }
+        }
     }
 });

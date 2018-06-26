@@ -97,9 +97,24 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.extension.onConnect.addListener((port) => {
         port.postMessage({data: resSelection, title: selection});
     })
-    // send result to content script to color selection
-    chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+
+    // check if the user wants the selection's individual sentiments 
+    chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
+        if (result.SHOW_SENTIMENT_FOR_SELECTION) {
+            // send result to content script 
+            chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection}, null);  
+            });
+        }
+    });
+    // check if the user wants to color the selection 
+    chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { 
+        if (result.COLOR_SELECTION) {
+            // send result to content script 
+            chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+            });
+        }
     });
 });
 
@@ -116,9 +131,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resOverall, title: request.pageName});
         })
-        // send result to content script if SHOW_RECOGNIZED
-        chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD", data: resOverall}, null);  
+        // check if the user wants to color the page's individual sentiments 
+        chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
+            if (result.SHOW_SENTIMENT_FOR_PAGES) {
+                // send result to content script 
+                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PG", data: resOverall}, null);  
+                });
+            }
         });
     }
     else if (request.type == "selectionClick") {
@@ -128,9 +148,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resSelection, title: request.title});
         });
-        // send result to content script to color selected paragraph
-        chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+        // check if the user wants to color the selection 
+        chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { 
+            if (result.COLOR_SELECTION) {
+                // send result to content script 
+                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+                });
+            }
+        });
+        // check if the user wants the selection's individual sentiments 
+        chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
+            if (result.SHOW_SENTIMENT_FOR_SELECTION) {
+                // send result to content script 
+                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection}, null);  
+                });
+            }
         });
     } 
 });
