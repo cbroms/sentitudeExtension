@@ -30,6 +30,15 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 
+// get user's saved options ?
+/*
+chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => { usr_AFINN_WEIGHT = result.AFINN_WEIGHT; }); 
+chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => { usr_SENTIC_WEIGHT = result.SENTIC_WEIGHT; }); 
+chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { usr_SHOW_SENTIMENT_FOR_PAGES = result.SHOW_SENTIMENT_FOR_PAGES; }); 
+chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { usr_SHOW_SENTIMENT_FOR_SELECTION = result.SHOW_SENTIMENT_FOR_SELECTION; }); 
+chrome.storage.sync.get(['COLOR_PAGES'], (result) => { usr_COLOR_PAGES = result.COLOR_PAGES;}); 
+chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { usr_COLOR_SELECTION = result.COLOR_SELECTION;}); 
+*/
 // Set up context menu (right click to run on highlighted text)
 chrome.runtime.onInstalled.addListener(() => {
   let id = chrome.contextMenus.create({
@@ -48,19 +57,27 @@ let getSentimentAverage = (data, type) => {
     let res = senticData;
     // map the afinn data to a new range
     afinnData.sentiment = mapValueToRange(afinnData.sentiment, -0.7, 0.7, -100, 100);
-    // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
-    // giving a slight bias to SenticNet 5 result for now 
-    let weightedMean = (afinnData.sentiment * 0.4 + senticData.sentimentMapped * 0.6) / (1);
-    res.sentimentMapped = Math.round(weightedMean);
-    // replace the old descriptor
-    res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
-    // combine word lists from AFINN and SenticNet
-    res.wordsPositive = res.wordsPositive.concat(afinnData.wordsPositive);
-    res.wordsNegative = res.wordsNegative.concat(afinnData.wordsNegative);
-    res.wordsMostPositive = res.wordsMostPositive.concat(afinnData.wordsMostPositive);
-    res.wordsMostNegative = res.wordsMostNegative.concat(afinnData.wordsMostNegative);
-    res.OGafinn = afinnData.sentiment;
-    res.OGsentic = senticData.sentimentMapped;
+    
+    let afinnWt, senticWt;
+    // get weights from storage 
+    chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => { 
+        afinnWt = result.AFINN_WEIGHT; 
+        chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => { 
+            senticWt = result.SENTIC_WEIGHT; 
+            // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
+            let weightedMean = (afinnData.sentiment * afinnWt + senticData.sentimentMapped * senticWt) / (1);
+            res.sentimentMapped = Math.round(weightedMean);
+            // replace the old descriptor
+            res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
+            // combine word lists from AFINN and SenticNet
+            res.wordsPositive = res.wordsPositive.concat(afinnData.wordsPositive);
+            res.wordsNegative = res.wordsNegative.concat(afinnData.wordsNegative);
+            res.wordsMostPositive = res.wordsMostPositive.concat(afinnData.wordsMostPositive);
+            res.wordsMostNegative = res.wordsMostNegative.concat(afinnData.wordsMostNegative);
+            res.OGafinn = afinnData.sentiment;
+            res.OGsentic = senticData.sentimentMapped;
+        }); 
+    }); 
     return res;
 };
 

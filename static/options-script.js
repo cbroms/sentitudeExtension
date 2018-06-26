@@ -43,22 +43,32 @@ let enableAfinn = () => {
     document.getElementById("weight-afinn-label").classList.remove("deactivated");
 };
 
+// save the weight inputs 
+let saveInput = () => {
+    chrome.storage.sync.set({AFINN_WEIGHT: document.getElementById("weight-afinn").value});
+    chrome.storage.sync.set({SENTICNET_WEIGHT: document.getElementById("weight-sentic").value});
+};
+
 // change weight inputs when options are disabled and enabled 
 let fixWeightInput = (firstInput, secondInput) => {
     if (firstInput.disabled) {
         secondInput.value = 1;
         firstInput.value = 0;
+        saveInput();
     }
     else if (secondInput.disabled) {
         firstInput.value = 1; 
         secondInput.value = 0;
+        saveInput();
     }
     else {
         chrome.storage.sync.get(['DEFAULT_AFINN_WEIGHT'], (result) => {
             secondInput.value = result.DEFAULT_AFINN_WEIGHT;
+            saveInput();
         }); 
         chrome.storage.sync.get(['DEFAULT_SENTIC_WEIGHT'], (result) => {
             firstInput.value = result.DEFAULT_SENTIC_WEIGHT;
+            saveInput();
         });
     }
 };
@@ -133,9 +143,8 @@ let verifyInput = (firstInput, secondInput) => {
     } else {
         firstInput.value = 1;
     }
-
-    // TODO: Save the inputs 
-
+    // save the inputs 
+    saveInput();
 };
 
 let timeout = null;
@@ -155,3 +164,11 @@ document.getElementById("weight-sentic").onkeyup = () => {
         verifyInput(document.getElementById("weight-sentic"), document.getElementById("weight-afinn"))
     }, 800);
 };
+
+// on change, notify the user 
+chrome.storage.onChanged.addListener((changes, namespace) => {
+        document.getElementById("saved").classList.remove("hidden");
+        setTimeout(() => {
+            document.getElementById("saved").classList.add("hidden");
+        }, 2500);
+});

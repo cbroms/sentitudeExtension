@@ -20,6 +20,7 @@
 
 .sentitude-tooltip .sentitude-tooltiptext {
     width: 250px;
+    padding: 10px;
     top: 100%;
     left: 50%; 
     margin-left: -125px;
