@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.sync.set({AFINN_WEIGHT: 0.4}); 
     chrome.storage.sync.set({SENTIC_WEIGHT: 0.6});
     chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
-    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: false});
+    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: true});
     chrome.storage.sync.set({COLOR_PAGES: false});
     chrome.storage.sync.set({COLOR_SELECTION: true}); 
 });
@@ -103,7 +103,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         if (result.SHOW_SENTIMENT_FOR_SELECTION) {
             // send result to content script 
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection}, null);  
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: selection}, null);  
             });
         }
     });
@@ -112,7 +112,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         if (result.COLOR_SELECTION) {
             // send result to content script 
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection, content: selection}, null);  
             });
         }
     });
@@ -153,7 +153,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (result.COLOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection}, null);  
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection, content: request.title}, null);  
                 });
             }
         });
@@ -162,7 +162,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (result.SHOW_SENTIMENT_FOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection}, null);  
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: request.title}, null);  
                 });
             }
         });

@@ -34,6 +34,7 @@ function getPageContents() {
 * Possible command types- 
 *   "SELECT-PH": make all paragraphs clickable and scan for sentiment on click
 *   "COLOR-PH": style a selection or paragraph with a color based on sentiment value 
+*   "COLOR-PG": style each paragraph with color 
 *   "COLOR-WD-PG": style individual words on a page based off their polarity values
 *   "COLOR-WD-PH": style individual words in a selection based off their polarity vals 
 */
@@ -61,12 +62,12 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
                         // get clicked element's content and clean
                         let res = element.innerText.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s-]/g, '').split(' ');
                         // send contents to background script
-                        chrome.runtime.sendMessage({clickContents: res, type: "selectionClick", title: element.innerHTML}, null);
+                        chrome.runtime.sendMessage({clickContents: res, type: "selectionClick", title: element.innerText}, null);
                         // get rid of event listener in same manner as above 
                         let newElement = element.cloneNode(true);
                         newElement.style.cursor = "default";
                         newElement.title = "";
-                        element.parentNode.replaceChild(newElement, element);
+                        element.parentNode.replaceChild(newElement, element); 
                     });
                 }
             });
@@ -78,7 +79,17 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     else if (msg.type == "COLOR-PH") {
         // style parent paragraph with border and background color according
         // to sentiment value
-        let elt = window.getSelection().anchorNode.parentElement;
+        let elt = window.getSelection().anchorNode;
+        // if the selection was a paragraph click, 
+        if (elt.tagName == undefined) {
+            // get all the scanned elements 
+            Array.from(document.getElementsByClassName("sentitude-scanned")).forEach((element) => {
+                // find the scanned element that matches the one we want to color 
+                if (element.innerText == msg.content) {
+                    elt = element;
+                }
+            });
+        }
         // fix for bug where parentElement isn't the paragraph above
         if (elt.tagName.toLowerCase() != "p") {
             elt = elt.parentElement;
@@ -91,7 +102,7 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
         elt.style.backgroundColor = "hsla(" + msg.data.sentimentColor + ", 100%, 50%, 0.3)";
         // add tooltip with sentiment values 
         elt.classList.add("sentitude-tooltip");
-        let spanWithResults = document.createElement("DIV");
+        let spanWithResults = document.createElement("SPAN");
         spanWithResults.classList.add("sentitude-tooltiptext");
         spanWithResults.innerHTML = "Sentiment: " + msg.data.descriptorSentiment + "</br>" +
         "Pleasantness: " + msg.data.descriptorPleasantness + "</br>" +
@@ -158,18 +169,39 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     }
     else if (msg.type == "COLOR-WD-PH") {
         // color individual recognized words based off their polarity values 
-        let element = null;
-        // check if the selection is an entire paragraph, not just a sentence in it 
-        Array.from(document.getElementsByTagName("p")).forEach((elt) => {
-            if (window.getSelection() == elt.innerText){
-                element = elt;
-            }
-        });
+        let element, content, oldContent;
+
+        // selection was a paragraph click 
+        if (window.getSelection().anchorNode == null) {
+            // get all previously scanned paragraphs 
+            Array.from(document.getElementsByClassName("sentitude-tooltiptext")).forEach((elt) => {
+                oldContent = elt.innerHTML;
+                // get the content of each element (minus its sentiment data)
+                let words = elt.parentNode.innerText.replace(elt.innerText, "");
+                // if the content matches the sanned data for that paragraph
+                if (msg.content == words){
+                    // assign the element 
+                    element = elt.parentNode;
+                    // get content of paragraph
+                    content = words;
+                } 
+            });
+        } else {
+            // selection was a right click 
+            // check if the selection is an entire paragraph, not just a sentence in it 
+            Array.from(document.getElementsByTagName("p")).forEach((elt) => {
+                // if the selection matches the paragraph, 
+                if (window.getSelection() == elt.innerText){
+                    element = elt;
+                    content = elt.innerText;
+                } 
+            });
+        }
+        
         let position = 0;
         // if the selection is a whole paragraph, 
         if (element != null) {
-         // get content of paragraph
-            let content = String(element.innerText);
+         
             let contentSplit = [], wordsInCombination = 0;
             // style of element 
             let style = window.getComputedStyle(element);
@@ -213,7 +245,14 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
                 });
                 contentSplit = contentSplit.join(' ');
                 element.innerHTML = contentSplit;
+                let newSpan = document.createElement("SPAN");
+                newSpan.innerHTML = oldContent;
+                newSpan.classList.add("sentitude-tooltiptext");
+                element.appendChild(newSpan);
             }
         }
+    }
+    else if (msg.type == "COLOR-PG") {
+        // color all scanned paragraphs 
     }
 });
