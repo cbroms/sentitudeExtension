@@ -5,14 +5,8 @@
     to background script
     */
 
-// if a paragraph contains these words, ignore them (probably left over from an adblocker)
-var bannedWords = ["Advertisement", "ADVERTISEMENT", "AD", "ad", "ADVERTISING", "Advertising", "Advert", "ADVERT"];
-// get the page's text content
-var res = getPageContents();
-// send text content to background script
-chrome.runtime.sendMessage({pageContents: res, type: "pageScan", pageName: document.title}, null);
-
-function getPageContents() {
+// get the paragraph contents from a page
+let getPageContents = () => {
     let elementsContent = [], words = [];
     // loop through elements and separate string content from DOM object
     Array.from(document.getElementsByTagName("p")).forEach((element) => {
@@ -29,6 +23,17 @@ function getPageContents() {
     return words;
 }
 
+// if a paragraph contains these words, ignore them (probably left over from an adblocker)
+let bannedWords = ["Advertisement", "ADVERTISEMENT", "AD", "ad", "ADVERTISING", "Advertising", "Advert", "ADVERT"];
+// get the page's text content
+let res = getPageContents();
+// send text content to background script
+chrome.runtime.sendMessage({pageContents: res, type: "pageScan", pageName: document.title}, null);
+
+let resData = [];
+let elements = 0; 
+let elementsScanned = 0;
+
 /**
 * Commands from the background script 
 * Possible command types- 
@@ -39,6 +44,8 @@ function getPageContents() {
 *   "COLOR-WD-PH": style individual words in a selection based off their polarity vals 
 */
 chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
+
+    let elementsContent = [], words = [];
     
     if (msg.type == "SELECT-PH") {
         // function to make a page's paragraphs clickable to scan for sentiment
@@ -254,5 +261,56 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     }
     else if (msg.type == "COLOR-PG") {
         // color all scanned paragraphs 
+        // get all paragraphs 
+        console.log("colorng");
+        Array.from(document.getElementsByTagName("p")).forEach((element) => {
+            // get element contents 
+            let content = String(element.innerText)
+            let style = window.getComputedStyle(element);
+            // ensure the element is visible and not an advertisement
+            if (!bannedWords.includes(content) && style.display !== 'none' && element.offsetHeight > 0) elementsContent.push(content);
+        });
+        // send a message to the background script with the number of requests to expect
+        chrome.runtime.sendMessage({type: "autoParagraphScanData", requests: elementsContent.length});
+        // loop through string content and separate into individual words 
+        elementsContent.forEach((elt) => {
+            // clean the text of specials, convert to lower, and split into words 
+            let words = elt.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s]/g, '').split(' ');
+            // send contents to background script for scan
+            chrome.runtime.sendMessage({content: words, type: "autoParagraphScan", title: elt.innerText}, null);
+        });
+    }
+
+    else if (msg.type == "COLOR-PG-DATA") {
+        console.log("goinf");
+        // we received the resulting data from the background script for scanned paragraphs 
+        resData = msg.data;
+        let i = 0;
+        // loop through the paragraphs 
+        Array.from(document.getElementsByTagName("p")).forEach((elt) => {
+            // get content of element 
+            let content = String(elt.innerText)
+            let style = window.getComputedStyle(elt);
+            // ensure the element is visible and not an advertisement
+            if (!bannedWords.includes(content) && style.display !== 'none' && elt.offsetHeight > 0){
+                // add class to signify text has been scanned
+                elt.classList.add("sentitude-scanned");
+                // style with color 
+                elt.style.border = "1px solid " + "hsl(" + resData[i].sentimentColor + ", 100%, 50%)";
+                elt.style.borderRadius = "4px";
+                elt.style.backgroundColor = "hsla(" + resData[i].sentimentColor + ", 100%, 50%, 0.3)";
+                // add tooltip with sentiment values 
+                elt.classList.add("sentitude-tooltip");
+                let spanWithResults = document.createElement("SPAN");
+                spanWithResults.classList.add("sentitude-tooltiptext");
+                spanWithResults.innerHTML = "Sentiment: " + resData[i].descriptorSentiment + "</br>" +
+                "Pleasantness: " + resData[i].descriptorPleasantness + "</br>" +
+                "Attention Value: " + resData[i].descriptorAttention;
+                // add tooltip to selected paragraph
+                elt.appendChild(spanWithResults);
+                // only increment i if the element is valid to keep in sync with scans 
+                i++;
+            }
+        });
     }
 });

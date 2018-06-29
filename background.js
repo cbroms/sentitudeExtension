@@ -17,16 +17,31 @@ let resSelection;
 // a user's selected text 
 let selection;
 
+let requestNumber = 0;
+let collectedScanData = [];
+
 // save default values to storage on first time setup
 chrome.runtime.onInstalled.addListener((details) => {
-    chrome.storage.sync.set({DEFAULT_AFINN_WEIGHT: 0.4}); 
-    chrome.storage.sync.set({DEFAULT_SENTIC_WEIGHT: 0.6}); 
-    chrome.storage.sync.set({AFINN_WEIGHT: 0.4}); 
-    chrome.storage.sync.set({SENTIC_WEIGHT: 0.6});
-    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
-    chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: true});
-    chrome.storage.sync.set({COLOR_PAGES: false});
-    chrome.storage.sync.set({COLOR_SELECTION: true}); 
+    // first time install
+    if (details.reason == "install") {
+        chrome.storage.sync.set({DEFAULT_AFINN_WEIGHT: 0.4}); 
+        chrome.storage.sync.set({DEFAULT_SENTIC_WEIGHT: 0.6}); 
+        chrome.storage.sync.set({AFINN_WEIGHT: 0.4}); 
+        chrome.storage.sync.set({SENTIC_WEIGHT: 0.6});
+        chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
+        chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: false});
+        chrome.storage.sync.set({COLOR_PAGES: false});
+        chrome.storage.sync.set({COLOR_SELECTION: true}); 
+    } else {
+        // update
+    }
+    // set up the context menu for right click 
+    let id = chrome.contextMenus.create({
+    "title": "Get sentiment of selection", 
+    "contexts": ["selection"],
+    "id": "context" + "selection"
+    });  
+    
 });
 
 
@@ -39,14 +54,6 @@ chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { usr_SHOW
 chrome.storage.sync.get(['COLOR_PAGES'], (result) => { usr_COLOR_PAGES = result.COLOR_PAGES;}); 
 chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { usr_COLOR_SELECTION = result.COLOR_SELECTION;}); 
 */
-// Set up context menu (right click to run on highlighted text)
-chrome.runtime.onInstalled.addListener(() => {
-  let id = chrome.contextMenus.create({
-    "title": "Get sentiment of selection", 
-    "contexts": ["selection"],
-    "id": "context" + "selection"
-    });  
-});
 
 /**
 *   get the average of AFINN and SenticNet computed sentiments 
@@ -131,6 +138,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resOverall, title: request.pageName});
         })
+        // check if the user wants to color the all the page's paragraphs 
+        chrome.storage.sync.get(['COLOR_PAGES'], (result) => { 
+            if (result.COLOR_PAGES) {
+                console.log("coloring");
+                // send result to content script 
+                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PG", data: resOverall}, null);  
+                });
+            }
+        });
         // check if the user wants to color the page's individual sentiments 
         chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
             if (result.SHOW_SENTIMENT_FOR_PAGES) {
@@ -140,6 +157,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
+        
     }
     else if (request.type == "selectionClick") {
         // message contains a paragraph click
@@ -167,6 +185,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
     } 
+    else if (request.type == "autoParagraphScan" || request.type == "autoParagraphScanData") {
+        // message contains an auto paragraph scan or scan data 
+        if (request.type == "autoParagraphScanData") {
+            // get the number of incoming scan requests to expect 
+            requestNumber = request.requests;
+        } else {
+            // we got a scan request, calculate and put in finished array 
+            collectedScanData.push(getSentimentAverage(request.content, "rightClick"));
+            // if we've scanned all requests, 
+            if (collectedScanData.length == requestNumber) {
+                // send the arrray of finished scans to the content script 
+                chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PG-DATA", data: collectedScanData}, null);  
+                    // clear the scanned data array 
+                    collectedScanData = [];
+                });
+                
+            }
+        }
+    }
 });
 
 /**
@@ -528,19 +566,9 @@ function analyzeTextSentimentAFINN111(text, type) {
         if (pattern.test(inputWord)) return inputWord.replace(pattern, word);
     }
     // check if word is regular, if so, replace with regex and return 
-    for(reg in singular){
+    for (reg in singular) {
         let pattern = new RegExp(reg, 'i');
         if (pattern.test(inputWord)) return inputWord.replace(pattern, singular[reg]);
     }
     return inputWord;
-}
-
-function isSingluar(inputWord) {
-    if (singularize(inputWord) == inputWord) return true;
-    else return false;
-}
-
-function isPlural(inputWord) {
-    if (pluralize(inputWord) == inputWord) return true;
-    else return false;
 }

@@ -10,6 +10,23 @@ chrome.storage.sync.get(['SENTICNET_WEIGHT'], (result) => {
     document.getElementById("weight-sentic").value = result.SENTICNET_WEIGHT;
 }); 
 
+// set checkboxes based off of stored values 
+chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => {
+    document.getElementById("sent-all").checked = result.SHOW_SENTIMENT_FOR_PAGES;
+}); 
+
+chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => {
+    document.getElementById("sent-selection").checked = result.SHOW_SENTIMENT_FOR_SELECTION;
+}); 
+
+chrome.storage.sync.get(['COLOR_PAGES'], (result) => {
+    document.getElementById("color-all").checked = result.COLOR_PAGES;
+}); 
+
+chrome.storage.sync.get(['COLOR_SELECTION'], (result) => {
+    document.getElementById("color-selection").checked = result.COLOR_SELECTION;
+}); 
+
 // change stored values based off of changes to checkboxes 
 document.getElementById("sent-all").addEventListener('change', () => {
     if (document.getElementById("sent-all").checked) chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: true});
