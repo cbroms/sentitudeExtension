@@ -86,7 +86,7 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
     else if (msg.type == "COLOR-PH") {
         // style parent paragraph with border and background color according
         // to sentiment value
-        let elt = window.getSelection().anchorNode;
+        let elt = window.getSelection().anchorNode.parentElement;
         // if the selection was a paragraph click, 
         if (elt.tagName == undefined) {
             // get all the scanned elements 

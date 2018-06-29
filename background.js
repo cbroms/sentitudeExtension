@@ -34,26 +34,19 @@ chrome.runtime.onInstalled.addListener((details) => {
         chrome.storage.sync.set({COLOR_SELECTION: true}); 
     } else {
         // update
-    }
-    // set up the context menu for right click 
-    let id = chrome.contextMenus.create({
+    } 
+    
+});
+
+// Set up context menu (right click to run on highlighted text)
+chrome.runtime.onInstalled.addListener(() => {
+  let id = chrome.contextMenus.create({
     "title": "Get sentiment of selection", 
     "contexts": ["selection"],
     "id": "context" + "selection"
     });  
-    
 });
 
-
-// get user's saved options ?
-/*
-chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => { usr_AFINN_WEIGHT = result.AFINN_WEIGHT; }); 
-chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => { usr_SENTIC_WEIGHT = result.SENTIC_WEIGHT; }); 
-chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { usr_SHOW_SENTIMENT_FOR_PAGES = result.SHOW_SENTIMENT_FOR_PAGES; }); 
-chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { usr_SHOW_SENTIMENT_FOR_SELECTION = result.SHOW_SENTIMENT_FOR_SELECTION; }); 
-chrome.storage.sync.get(['COLOR_PAGES'], (result) => { usr_COLOR_PAGES = result.COLOR_PAGES;}); 
-chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { usr_COLOR_SELECTION = result.COLOR_SELECTION;}); 
-*/
 
 /**
 *   get the average of AFINN and SenticNet computed sentiments 
@@ -94,6 +87,7 @@ let getSentimentAverage = (data, type) => {
 *    to display on the page
 */
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+    
     // set get selection text for use by popup
     selection = info.selectionText;
     // clean the text of specials, convert to lower, and split into words
@@ -200,8 +194,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PG-DATA", data: collectedScanData}, null);  
                     // clear the scanned data array 
                     collectedScanData = [];
-                });
-                
+                });   
             }
         }
     }
