@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+      _________  ____________________  _____  ____
+     / __/ __/ |/ /_  __/  _/_  __/ / / / _ \/ __/
+     \ \/ _//    / / / _/ /  / / / /_/ / // / _/  
+   /___/___/_/|_/ /_/ /___/ /_/  \____/____/___/                                                 
+
+    @file popup.html - popup page 
+    @author Christian Broms 
+    @license MIT license 
+
+-->
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Chivo:300,400,700i|Source+Code+Pro" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <div class="smaller-body">
+
+    <h1 class="panel-head-title">OVERALL PAGE</h1>
+    <div class="panel closed scanned" id="scanned-panel">
+        <div class="head lighter" id="scanned-head">
+            <div class="hidden center-multiline" id="scanned-prompt">
+                <p class="padded">To analyze a page, reload it.</p>
+            </div>
+            <div class="head-colored" id="scanned-colored-sentiment">
+                <h2 class="value outer" id="scanned-sentiment" title="/&plusmn;100"></h2>
+            </div>
+            <div class="head-title" id="scanned-head-stripe">
+                <p class="source-info" id="scanned-source"></p>
+            </div>
+            <h2 class="head-title-text outer top-text" id="scanned-title">SENTIMENT</h2>
+            <p class="descriptor desc-top" id="scanned-sentiment-desc"></p>
+            <span class="triangle outer scanned" id="scanned-triangle">&#9660;</span>
+        </div>
+        <div class="head-inner">
+            <div class="head-inner-colored" id="scanned-colored-pleasantness">
+                <h2 class="value inner" id="scanned-pleasantness" title="/&plusmn;100"></h2>
+            </div>
+            <h2 class="head-title-text inner">PLEASANTNESS</h2>
+            <p class="descriptor" id="scanned-pleasantness-desc"></p>
+        </div>
+        <div class="head-inner lighter bottom-rl">
+            <div class="head-inner-colored bottom-l" id="scanned-colored-attention">
+                <h2 class="value inner" id="scanned-attention" title="/&plusmn;100"></h2>
+            </div>
+            <h2 class="head-title-text inner">ATTENTION VALUE</h2>
+            <p class="descriptor" id="scanned-attention-desc"></p>
+        </div>
+    </div>
+
+    <h1 class="panel-head-title">YOUR SELECTION</h1>
+    <div class="panel closed selected" id="selected-panel">
+        <div class="head lighter" id="selected-head">
+            <div class="hidden center-multiline" id="selected-prompt">
+                <p class="padded">To analyze some text, select it, right click and pick "Get sentiment of selection."</p>
+            </div>
+            <div class="head-colored" id="selected-colored-sentiment">
+                <h2 class="value outer" id="selected-sentiment" title="/&plusmn;100"></h2>
+            </div>
+            <div class="head-title" id="selected-head-stripe">
+                <p class="source-info" id="selected-source"></p>
+            </div>
+            <h2 class="head-title-text outer top-text" id="selected-title">SENTIMENT</h2>
+            <p class="descriptor desc-top" id="selected-sentiment-desc"></p>
+            <span class="triangle outer selected" id="selected-triangle">&#9660;</span>
+        </div>
+        <div class="head-inner">
+            <div class="head-inner-colored" id="selected-colored-pleasantness">
+                <h2 class="value inner" id="selected-pleasantness" title="/&plusmn;100"></h2>
+            </div>
+            <h2 class="head-title-text inner">PLEASANTNESS</h2>
+            <p class="descriptor" id="selected-pleasantness-desc"></p>
+        </div>
+        <div class="head-inner lighter bottom-rl">
+            <div class="head-inner-colored bottom-l" id="selected-colored-attention">
+                <h2 class="value inner" id="selected-attention" title="/&plusmn;100"></h2>
+            </div>
+            <h2 class="head-title-text inner">ATTENTION VALUE</h2>
+            <p class="descriptor" id="selected-attention-desc"></p>
+        </div>
+    </div>
+
+    <h1 class="panel-head-title">OPTIONS</h1>
+    <div class="button-wrapper">
+        <div class="button">
+            <div class="center-multiline" id="select-ph"><p>Select Paragraphs</p></div>
+        </div>
+        <div class="button">
+            <div class="center-multiline" id="analyze-pg"><p>Analyze this Page</p></div>
+        </div>
+        <div class="button">
+            <div class="center-multiline" id="help"><p>Settings</p></div>
+        </div>
+    </div>
+    </div>
+
+<script type="text/javascript" src="popup-script.js"></script>
+</body>
+</html>

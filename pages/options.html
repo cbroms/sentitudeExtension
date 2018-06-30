@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+      _________  ____________________  _____  ____
+     / __/ __/ |/ /_  __/  _/_  __/ / / / _ \/ __/
+     \ \/ _//    / / / _/ /  / / / /_/ / // / _/  
+   /___/___/_/|_/ /_/ /___/ /_/  \____/____/___/                                                 
+
+    @file options.html - options page 
+    @author Christian Broms 
+    @license MIT license 
+
+-->
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Chivo:300,400,700i|Source+Code+Pro" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="../scripts/injected/content.css">
+    <title>Options - Sentitude</title>
+</head>
+<body>
+
+    <div class="larger-body">
+
+        <div class="section">
+            <div class="section-heading">Display Options</div>
+            <hr> 
+            <div class="sentitude-tooltip sub-title">
+                Show Individual Sentiment 
+                <div class="sentitude-tooltiptext"> 
+                    Display the sentiment values of all words and give each a color representation on the page.
+                </div>
+            </div>
+            <div class="section-options">
+                <input type="checkbox" value="check" type="checkbox" id="sent-all">
+                <label for="sent-all">For All Pages</label> <br>
+                <input type="checkbox" id="sent-selection">
+                <label for="sent-selection">For My Selections</label>
+            </div>
+            <hr> 
+            <div class="sentitude-tooltip sub-title">
+               Color Analyzed Text
+               <div class="sentitude-tooltiptext">
+                After analyzing text, show a color representation of its sentiment value on the page.
+               </div>
+           </div>
+           <div class="section-options">
+            <input type="checkbox" id="color-all">
+            <label for="color-all">For All Pages</label> <br>
+            <input type="checkbox" id="color-selection" checked="true">
+            <label for="color-selection">For My Selections</label>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-heading">Sentiment Analysis Options</div>
+        <hr> 
+        <div class="sentitude-tooltip sub-title">
+            Compute Sentiment
+            <div class="sentitude-tooltiptext">
+                Dictionaries used to compute the sentiment value. Pick one or more and choose a weight for each. The sentiment value of your selections will be a weighted average. 
+            </div>
+        </div>
+        <div class="section-options">
+            <input type="checkbox" id="sent-afinn" checked>
+            <label for="sent-afinn">AFINN-111</label> 
+            <label class="tabbed" id="weight-afinn-label" for="weight-afinn">Weight</label> 
+            <input class="tabbed-smaller" type="text" id="weight-afinn" value="">
+            <br>
+            <input type="checkbox" id="sent-sentic" checked>
+            <label for="sent-sentic">SenticNet 5</label> 
+            <label class="tabbed" id="weight-sentic-label" for="weight-sentic">Weight</label> 
+            <input class="tabbed-smaller" type="text" id="weight-sentic" value="">
+        </div>
+        <hr> 
+        <div class="sentitude-tooltip sub-title">
+            Compute Pleasantness 
+            <div class="sentitude-tooltiptext">
+                Dictionaries used to compute the pleasantness value.
+            </div>
+        </div>
+        <div class="section-options">
+            <input type="checkbox" id="pleas-sentic" checked="true" disabled="disabled">
+            <label for="pleas-sentic" >SenticNet 5</label> <br>
+        </div>
+        <hr> 
+        <div class="sentitude-tooltip sub-title">
+            Compute Attention Value
+            <div class="sentitude-tooltiptext">
+                Dictionaries used to compute the attention value.
+            </div>
+        </div>
+        <div class="section-options">
+            <input type="checkbox" id="attn-sentic" checked="true" disabled="disabled">
+            <label for="attn-sentic">SenticNet 5</label> <br>
+        </div>
+    </div>
+
+    <div class="footer-left hidden" id="saved">
+        Changes Saved!
+    </div>
+
+    <div class="footer">
+        Sentitude Version <span id="version">0.0</span> &mdash;
+        View the <a href="https://github.com/CBR0MS/nlpExtension">Source Code on GitHub</a> &mdash;
+        <a href="#">About</a>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="options-script.js"></script>
+</body>
+</html>
