@@ -11,54 +11,72 @@
 *   
 */
 
+// use synced storage, fallback on local storage if sync is disabled
+const storage = chrome.storage.sync;
+
 // update the extension version number
 document.getElementById("version").innerHTML = chrome.runtime.getManifest().version;
 
+// get the latest icon
+document.getElementById("icon").src = "../" + chrome.runtime.getManifest().icons[128];
+
 // set the weights to their stored values
-chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => {
+storage.get(['AFINN_WEIGHT'], (result) => {
     document.getElementById("weight-afinn").value = result.AFINN_WEIGHT;
+    if (result.AFINN_WEIGHT == 0) {
+        // if the value is zero, uncheck its label
+        document.getElementById("sent-afinn").checked = false;
+        document.getElementById("weight-afinn").disabled = true;
+        document.getElementById("weight-afinn-label").classList.add("deactivated");
+    }
 }); 
 
-chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => {
+storage.get(['SENTIC_WEIGHT'], (result) => {
     document.getElementById("weight-sentic").value = result.SENTIC_WEIGHT;
+    if (result.SENTIC_WEIGHT == 0) {
+        // if the value is zero, uncheck its label
+        document.getElementById("sent-sentic").checked = false;
+        document.getElementById("weight-sentic").disabled = true;
+        document.getElementById("weight-sentic-label").classList.add("deactivated");
+    }
 }); 
 
 // set checkboxes based off of stored values 
-chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => {
+storage.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => {
     document.getElementById("sent-all").checked = result.SHOW_SENTIMENT_FOR_PAGES;
 }); 
 
-chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => {
+storage.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => {
     document.getElementById("sent-selection").checked = result.SHOW_SENTIMENT_FOR_SELECTION;
 }); 
 
-chrome.storage.sync.get(['COLOR_PAGES'], (result) => {
+storage.get(['COLOR_PAGES'], (result) => {
     document.getElementById("color-all").checked = result.COLOR_PAGES;
 }); 
 
-chrome.storage.sync.get(['COLOR_SELECTION'], (result) => {
+storage.get(['COLOR_SELECTION'], (result) => {
     document.getElementById("color-selection").checked = result.COLOR_SELECTION;
 }); 
 
 // change stored values based off of changes to checkboxes 
 document.getElementById("sent-all").addEventListener('change', () => {
-    if (document.getElementById("sent-all").checked) chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: true});
-    else chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
+    if (document.getElementById("sent-all").checked) storage.set({SHOW_SENTIMENT_FOR_PAGES: true});
+    else storage.set({SHOW_SENTIMENT_FOR_PAGES: false});
 });
 
 document.getElementById("sent-selection").addEventListener('change', () => {
-    if (document.getElementById("sent-selection").checked) chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: true});
-    else chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: false}); 
+    if (document.getElementById("sent-selection").checked) storage.set({SHOW_SENTIMENT_FOR_SELECTION: true});
+    else storage.set({SHOW_SENTIMENT_FOR_SELECTION: false}); 
 });
 
 document.getElementById("color-all").addEventListener('change', () => {
-    if (document.getElementById("color-all").checked) chrome.storage.sync.set({COLOR_PAGES: true});
-    else chrome.storage.sync.set({COLOR_PAGES: false});
+    if (document.getElementById("color-all").checked) storage.set({COLOR_PAGES: true});
+    else storage.set({COLOR_PAGES: false});
 });
 
 document.getElementById("color-selection").addEventListener('change', () => {
-    if (document.getElementById("color-selection").checked) chrome.storage.sync.set({COLOR_SELECTION: true});
-    else chrome.storage.sync.set({COLOR_SELECTION: false}); 
+    if (document.getElementById("color-selection").checked) storage.set({COLOR_SELECTION: true});
+    else storage.set({COLOR_SELECTION: false}); 
 });
 
 // enable senticNet weight input box
@@ -75,8 +93,8 @@ let enableAfinn = () => {
 
 // save the weight inputs 
 let saveInput = () => {
-    chrome.storage.sync.set({AFINN_WEIGHT: document.getElementById("weight-afinn").value});
-    chrome.storage.sync.set({SENTIC_WEIGHT: document.getElementById("weight-sentic").value});
+    storage.set({AFINN_WEIGHT: document.getElementById("weight-afinn").value});
+    storage.set({SENTIC_WEIGHT: document.getElementById("weight-sentic").value});
 };
 
 // change weight inputs when options are disabled and enabled 
@@ -92,11 +110,11 @@ let fixWeightInput = (firstInput, secondInput) => {
         saveInput();
     }
     else {
-        chrome.storage.sync.get(['DEFAULT_AFINN_WEIGHT'], (result) => {
+        storage.get(['DEFAULT_AFINN_WEIGHT'], (result) => {
             secondInput.value = result.DEFAULT_AFINN_WEIGHT;
             saveInput();
         }); 
-        chrome.storage.sync.get(['DEFAULT_SENTIC_WEIGHT'], (result) => {
+        storage.get(['DEFAULT_SENTIC_WEIGHT'], (result) => {
             firstInput.value = result.DEFAULT_SENTIC_WEIGHT;
             saveInput();
         });
@@ -163,10 +181,10 @@ let verifyInput = (firstInput, secondInput) => {
             secondInput.value = Math.round((1 - firstInput.value) * 100) / 100;
         } else {
             // something besides a number was input, reset to default
-            chrome.storage.sync.get(['DEFAULT_AFINN_WEIGHT'], (result) => {
+            storage.get(['DEFAULT_AFINN_WEIGHT'], (result) => {
                 secondInput.value = result.DEFAULT_AFINN_WEIGHT;
             }); 
-            chrome.storage.sync.get(['DEFAULT_SENTIC_WEIGHT'], (result) => {
+            storage.get(['DEFAULT_SENTIC_WEIGHT'], (result) => {
                 firstInput.value = result.DEFAULT_SENTIC_WEIGHT;
             });
         }

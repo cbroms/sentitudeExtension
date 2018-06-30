@@ -26,36 +26,37 @@ let resOverall;
 let resSelection;
 // a user's selected text 
 let selection;
-
+// number of incomming requests from the content script 
 let requestNumber = 0;
+// list of completed requests
 let collectedScanData = [];
+
+// use synced storage, fallback on local storage if sync is disabled
+const storage = chrome.storage.sync;
 
 // save default values to storage on first time setup
 chrome.runtime.onInstalled.addListener((details) => {
     // first time install
     if (details.reason == "install") {
-        chrome.storage.sync.set({DEFAULT_AFINN_WEIGHT: 0.4}); 
-        chrome.storage.sync.set({DEFAULT_SENTIC_WEIGHT: 0.6}); 
-        chrome.storage.sync.set({AFINN_WEIGHT: 0.4}); 
-        chrome.storage.sync.set({SENTIC_WEIGHT: 0.6});
-        chrome.storage.sync.set({SHOW_SENTIMENT_FOR_PAGES: false});
-        chrome.storage.sync.set({SHOW_SENTIMENT_FOR_SELECTION: false});
-        chrome.storage.sync.set({COLOR_PAGES: false});
-        chrome.storage.sync.set({COLOR_SELECTION: true}); 
+        storage.set({DEFAULT_AFINN_WEIGHT: 0.4}); 
+        storage.set({DEFAULT_SENTIC_WEIGHT: 0.6}); 
+        storage.set({AFINN_WEIGHT: 0.4}); 
+        storage.set({SENTIC_WEIGHT: 0.6});
+        storage.set({SHOW_SENTIMENT_FOR_PAGES: false});
+        storage.set({SHOW_SENTIMENT_FOR_SELECTION: false});
+        storage.set({COLOR_PAGES: false});
+        storage.set({COLOR_SELECTION: true}); 
     } else {
         // update
     } 
-    
-});
-
-// Set up context menu (right click to run on highlighted text)
-chrome.runtime.onInstalled.addListener(() => {
-  let id = chrome.contextMenus.create({
+    // set up context menu to run on right click
+    let id = chrome.contextMenus.create({
     "title": "Get sentiment of selection", 
     "contexts": ["selection"],
     "id": "context" + "selection"
-    });  
+    });
 });
+
 
 /**
 *   get the average of AFINN and SenticNet computed sentiments 
@@ -69,9 +70,9 @@ let getSentimentAverage = (data, type) => {
     
     let afinnWt, senticWt;
     // get weights from storage 
-    chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => { 
+    storage.get(['AFINN_WEIGHT'], (result) => { 
         afinnWt = result.AFINN_WEIGHT; 
-        chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => { 
+        storage.get(['SENTIC_WEIGHT'], (result) => { 
             senticWt = result.SENTIC_WEIGHT; 
             // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
             let weightedMean = (afinnData.sentiment * afinnWt + senticData.sentimentMapped * senticWt) / (1);
@@ -107,22 +108,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.extension.onConnect.addListener((port) => {
         port.postMessage({data: resSelection, title: selection});
     })
-
-    // check if the user wants the selection's individual sentiments 
-    chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
-        if (result.SHOW_SENTIMENT_FOR_SELECTION) {
-            // send result to content script 
-            chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: selection}, null);  
-            });
-        }
-    });
     // check if the user wants to color the selection 
-    chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { 
+    storage.get(['COLOR_SELECTION'], (result) => { 
         if (result.COLOR_SELECTION) {
             // send result to content script 
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
                 chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection, content: selection}, null);  
+            });
+        }
+    });
+    // check if the user wants the selection's individual sentiments 
+    storage.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
+        if (result.SHOW_SENTIMENT_FOR_SELECTION) {
+            // send result to content script 
+            chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: selection}, null);  
             });
         }
     });
@@ -140,9 +140,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // send result to popup
         chrome.extension.onConnect.addListener((port) => {
             port.postMessage({data: resOverall, title: request.pageName});
+            // add the sentiment value to the icon
+            chrome.browserAction.setBadgeText({text: String(resOverall.sentimentMapped)});
+            // change HSL color to RBG
+            let rgbColor = HSLToRGB(resOverall.sentimentColor, 1, 0.4);
+            // change the background color of the number
+            chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
         })
         // check if the user wants to color the all the page's paragraphs 
-        chrome.storage.sync.get(['COLOR_PAGES'], (result) => { 
+        storage.get(['COLOR_PAGES'], (result) => { 
             if (result.COLOR_PAGES) {
                 console.log("coloring");
                 // send result to content script 
@@ -152,7 +158,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         // check if the user wants to color the page's individual sentiments 
-        chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
+        storage.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
             if (result.SHOW_SENTIMENT_FOR_PAGES) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
@@ -160,13 +166,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
-
-        // add the sentiment value to the icon
-        chrome.browserAction.setBadgeText({text: String(resOverall.sentimentMapped)});
-        // change HSL color to RBG
-        let rgbColor = HSLToRGB(resOverall.sentimentColor, 1, 0.4);
-        // change the background color of the number
-        chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
     }
     else if (request.type == "selectionClick") {
         // message contains a paragraph click
@@ -176,7 +175,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             port.postMessage({data: resSelection, title: request.title});
         });
         // check if the user wants to color the selection 
-        chrome.storage.sync.get(['COLOR_SELECTION'], (result) => { 
+        storage.get(['COLOR_SELECTION'], (result) => { 
             if (result.COLOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
@@ -185,7 +184,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         // check if the user wants the selection's individual sentiments 
-        chrome.storage.sync.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
+        storage.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => { 
             if (result.SHOW_SENTIMENT_FOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
@@ -356,7 +355,6 @@ function analyzeTextSentimentAFINN111(text, type) {
             }
         }());
         // now, if there is a dictionary value, we have it 
-        //if (objSentimentVal !== null) console.log(objSentimentVal.word);
         // push the found word or combination to the ordered list (can be null too)
         ordered.push(objSentimentVal);
     

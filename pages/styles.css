@@ -137,6 +137,17 @@ input[type=text]+label {
     opacity: 0.7;
 }
 
+.header-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+#icon {
+    height: 20px;
+    width: 20px;
+}
+
 .panel {
     width: 290px;
     height: 290px;
