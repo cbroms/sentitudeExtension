@@ -15,6 +15,7 @@
 *   "COLOR-PG" - style each paragraph with color 
 *   "COLOR-WD-PG" - style individual words on a page based off their polarity values
 *   "COLOR-WD-PH" - style individual words in a selection based off their polarity vals 
+*   "GET-SELECTION" - get the selected text on the page
 *   
 */
 
@@ -320,5 +321,9 @@ chrome.extension.onMessage.addListener((msg, sender, sendResponse) => {
                 i++;
             }
         });
+    }
+    else if (msg.type == "GET-SELECTION") {
+        // get the selected text on the page
+        sendResponse({selection: window.getSelection().toString()});
     }
 });

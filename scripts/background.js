@@ -51,19 +51,19 @@ chrome.runtime.onInstalled.addListener((details) => {
     } 
     // set up context menu to run on right click
     let id = chrome.contextMenus.create({
-    "title": "Get sentiment of selection", 
-    "contexts": ["selection"],
-    "id": "context" + "selection"
+        "title": "Get sentiment of selection", 
+        "contexts": ["selection"],
+        "id": "context" + "selection"
     });
 });
-
 
 /**
 *   get the average of AFINN and SenticNet computed sentiments 
 */
-let getSentimentAverage = (data, type) => {
+let getSentimentAverage = (data, type, callback) => {
     let afinnData = analyzeTextSentimentAFINN111(data, type);
     let senticData = analyzeTextSentimentSenticNet5(data, type);
+    // object to return / pass to callback
     let res = senticData;
     // map the afinn data to a new range
     afinnData.sentiment = mapValueToRange(afinnData.sentiment, -0.7, 0.7, -100, 100);
@@ -76,6 +76,8 @@ let getSentimentAverage = (data, type) => {
             senticWt = result.SENTIC_WEIGHT; 
             // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
             let weightedMean = (afinnData.sentiment * afinnWt + senticData.sentimentMapped * senticWt) / (1);
+            
+            console.log(res);
             res.sentimentMapped = Math.round(weightedMean);
             // replace the old descriptor
             res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
@@ -86,34 +88,27 @@ let getSentimentAverage = (data, type) => {
             res.wordsMostNegative = res.wordsMostNegative.concat(afinnData.wordsMostNegative);
             res.OGafinn = afinnData.sentiment;
             res.OGsentic = senticData.sentimentMapped;
+            if (callback != null) callback(res);
         }); 
     }); 
     return res;
 };
 
-/** 
-*    add click event to get selected text, clean it, analyze, 
-*    and send JSON object result to popup menu, and to content script
-*    to display on the page
-*/
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-    
-    // set get selection text for use by popup
-    selection = info.selectionText;
+let handleSelectedTextHelper = () => {
     // clean the text of specials, convert to lower, and split into words
-    let cleaned = info.selectionText.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s-]/g, '').split(' ');
+    let cleaned = selection.toLowerCase().replace(/\n/g, ' ').replace(/[^\w\s-]/g, '').split(' ');
     // analyze 
-    resSelection = getSentimentAverage(cleaned, "rightClick");
-    // send result to popup 
-    chrome.extension.onConnect.addListener((port) => {
-        port.postMessage({data: resSelection, title: selection});
-    })
+    resSelection = getSentimentAverage(cleaned, "rightClick", (res) => {
+         // send result to popup 
+         chrome.extension.onConnect.addListener((port) => {
+            port.postMessage({data: res, title: selection});
+        })
     // check if the user wants to color the selection 
     storage.get(['COLOR_SELECTION'], (result) => { 
         if (result.COLOR_SELECTION) {
             // send result to content script 
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection, content: selection}, null);  
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: res, content: selection}, null);  
             });
         }
     });
@@ -122,10 +117,49 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         if (result.SHOW_SENTIMENT_FOR_SELECTION) {
             // send result to content script 
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: selection}, null);  
+                chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: res, content: selection}, null);  
             });
         }
     });
+});
+};
+
+let handleSelectedText = (info) => {
+    if (info == null) {
+        // request selected text from content script 
+        chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {type: "GET-SELECTION"}, (response) =>{
+                selection = response.selection;
+                if (selection != null && selection != undefined){
+                    // check for null just in case chrome allows you to use key commands without selected text
+                    handleSelectedTextHelper();
+                }
+                
+            });  
+        });
+    } else {
+        // get selection text 
+        selection = info.selectionText;
+        handleSelectedTextHelper();
+    }   
+};
+
+// listen for key commands 
+chrome.commands.onCommand.addListener((command) => {
+    // scan shortcut set to ⌘+⇧+A and ^+⇧+A
+    // (command+shift+A and control+shift+A)
+    if (command == "analyze-selected-text") {
+        handleSelectedText(null);
+    }
+});
+
+/** 
+*    add click event to get selected text, clean it, analyze, 
+*    and send JSON object result to popup menu, and to content script
+*    to display on the page
+*/
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    handleSelectedText(info);
 });
 
 /**
@@ -133,53 +167,55 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 *    and send JSON object to popup menu
 */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    
+
     if (request.type == "pageScan") {
         // message contains a page scan 
-        resOverall = getSentimentAverage(request.pageContents, "pageScan");
-        // send result to popup
-        chrome.extension.onConnect.addListener((port) => {
-            port.postMessage({data: resOverall, title: request.pageName});
+        resOverall = getSentimentAverage(request.pageContents, "pageScan", (res) => {
             // add the sentiment value to the icon
-            chrome.browserAction.setBadgeText({text: String(resOverall.sentimentMapped)});
+            chrome.browserAction.setBadgeText({text: String(res.sentimentMapped)});
             // change HSL color to RBG
-            let rgbColor = HSLToRGB(resOverall.sentimentColor, 1, 0.4);
+            let rgbColor = HSLToRGB(res.sentimentColor, 1, 0.4);
             // change the background color of the number
             chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
-        })
-        // check if the user wants to color the all the page's paragraphs 
-        storage.get(['COLOR_PAGES'], (result) => { 
-            if (result.COLOR_PAGES) {
-                console.log("coloring");
-                // send result to content script 
-                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PG", data: resOverall}, null);  
-                });
-            }
-        });
-        // check if the user wants to color the page's individual sentiments 
-        storage.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
-            if (result.SHOW_SENTIMENT_FOR_PAGES) {
-                // send result to content script 
-                chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PG", data: resOverall}, null);  
-                });
-            }
-        });
+
+            // send result to popup
+            chrome.extension.onConnect.addListener((port) => {
+                port.postMessage({data: res, title: request.pageName});
+            })
+            // check if the user wants to color the page's individual sentiments 
+            storage.get(['SHOW_SENTIMENT_FOR_PAGES'], (result) => { 
+                if (result.SHOW_SENTIMENT_FOR_PAGES) {
+                    // send result to content script 
+                    chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                        chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PG", data: res}, null);  
+                    });
+                }
+            });
+            // check if the user wants to color the all the page's paragraphs 
+            storage.get(['COLOR_PAGES'], (result) => { 
+                if (result.COLOR_PAGES) {
+                    // send result to content script 
+                    chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
+                        chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PG", data: res}, null);  
+                    });
+                }
+            });
+            
+        }); 
     }
     else if (request.type == "selectionClick") {
         // message contains a paragraph click
-        resSelection = getSentimentAverage(request.clickContents, "rightClick");
-        // send result to popup as a rightClick style object
-        chrome.extension.onConnect.addListener((port) => {
-            port.postMessage({data: resSelection, title: request.title});
-        });
+        resSelection = getSentimentAverage(request.clickContents, "rightClick", (res) => {
+            // send result to popup as a rightClick style object
+            chrome.extension.onConnect.addListener((port) => {
+                port.postMessage({data: res, title: request.title});
+            });
         // check if the user wants to color the selection 
         storage.get(['COLOR_SELECTION'], (result) => { 
             if (result.COLOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: resSelection, content: request.title}, null);  
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-PH", data: res, content: request.title}, null);  
                 });
             }
         });
@@ -188,10 +224,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (result.SHOW_SENTIMENT_FOR_SELECTION) {
                 // send result to content script 
                 chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
-                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: resSelection, content: request.title}, null);  
+                    chrome.tabs.sendMessage(tabs[0].id, {type: "COLOR-WD-PH", data: res, content: request.title}, null);  
                 });
             }
         });
+    });  
     } 
     else if (request.type == "autoParagraphScan" || request.type == "autoParagraphScanData") {
         // message contains an auto paragraph scan or scan data 
@@ -200,7 +237,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             requestNumber = request.requests;
         } else {
             // we got a scan request, calculate and put in finished array 
-            collectedScanData.push(getSentimentAverage(request.content, "rightClick"));
+            collectedScanData.push(getSentimentAverage(request.content, "rightClick", null));
             // if we've scanned all requests, 
             if (collectedScanData.length == requestNumber) {
                 // send the arrray of finished scans to the content script 
@@ -218,26 +255,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 *   listen for messages from popup from button presses
 */
 chrome.extension.onConnect.addListener((port) => {
-      port.onMessage.addListener((msg) => {
-           if (msg == "select_paragraphs") {
+    port.onMessage.addListener((msg) => {
+        if (msg == "select_paragraphs") {
             // send message to content script to make all paragraphs clickable
             chrome.tabs.query({active: true, currentWindow: true},(tabs) => {
                 chrome.tabs.sendMessage(tabs[0].id, {type: "SELECT-PH"}, null);  
             });
             // force the popup window to close
             port.postMessage("CLOSE_POPUP");
-           }
-           else if (msg == "analyze_page") {
-                // reload the current page to tigger sentiment analysis
-                chrome.tabs.getSelected(null, (tab) => {
-                    let code = 'window.location.reload();';
-                    chrome.tabs.executeScript(tab.id, {code: code});
-                });
-                // force the popup window to close
-                port.postMessage("CLOSE_POPUP");
-           }
-      });
- })
+        }
+        else if (msg == "analyze_page") {
+            // reload the current page to tigger sentiment analysis
+            chrome.tabs.getSelected(null, (tab) => {
+                let code = 'window.location.reload();';
+                chrome.tabs.executeScript(tab.id, {code: code});
+            });
+            // force the popup window to close
+            port.postMessage("CLOSE_POPUP");
+        }
+    });
+})
 
 /** 
 *    analyze an array of words and return a JSON object with data
@@ -255,9 +292,6 @@ function analyzeTextSentimentAFINN111(text, type) {
         // get word and its sentiment value from the dictionary 
         let obj = text[index], objSentimentVal = afinnData[obj];
         // if there is a dictionary value, 
-        // @TODO: if a word is not in the dictionary, assign it a value based
-        // off of the context in which it is used. For example, "apple" would
-        // get +1 if it is used like "good apple" and -1 if used like "bad apple" 
         if (objSentimentVal != null) {
             if (index > 0) {
                 // need to negate?
@@ -296,7 +330,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @borrows sentic5Data from background-load-objects.js
 *    @borrows negs from background-load-objects.js
 */
- function analyzeTextSentimentSenticNet5(text, type) {
+function analyzeTextSentimentSenticNet5(text, type) {
     // variables for processing text
     let polarityScore = 0, attentionScore = 0, pleasantnessScore = 0,
     positive = [''], negative = [''], mostPos = [''], mostNeg = [''],
@@ -320,7 +354,7 @@ function analyzeTextSentimentAFINN111(text, type) {
                 else objSentimentVal = makeWordCombinations(1, index, text);
             }
             chooseCombination();
-           
+
             // if we have nothing, 
             if (objSentimentVal == undefined || objSentimentVal == null) {
                 // try singlularizing the word 
@@ -331,8 +365,8 @@ function analyzeTextSentimentAFINN111(text, type) {
                 if (objSentimentVal != null && objSentimentVal != undefined) {
                     // we have a match with a singular version of the word!
                    // console.log("matched: " + text[index]);
-                }
-                else {
+               }
+               else {
                     // if there are still no matches, then the word is either 
                     // not in the dict, or we need to change up the grammar 
                     // using Porter-Stemmer alg to lemmatize 
@@ -347,8 +381,8 @@ function analyzeTextSentimentAFINN111(text, type) {
                     if (objSentimentVal != null && objSentimentVal != undefined) {
                         // we have a match with a lemmatized version of the word
                        // console.log("lemmatized: " + text[index]);
-                    }
-                }
+                   }
+               }
                 // return the word to its previous state so we don't 
                 // have to reparse the page
                 text[index] = obj;
@@ -357,14 +391,14 @@ function analyzeTextSentimentAFINN111(text, type) {
         // now, if there is a dictionary value, we have it 
         // push the found word or combination to the ordered list (can be null too)
         ordered.push(objSentimentVal);
-    
+
         // if there is a dictionary value, 
         if (objSentimentVal !== null && objSentimentVal !== undefined) {
             // senticNet5 array organized with [0: pleasantness_value, 1: attention_value, 2: polarity_value] 
             // get the sentiment values from the SenticNet array 
             let polarity_value = parseFloat(objSentimentVal.val[2]),
-                attention_value = parseFloat(objSentimentVal.val[1]),
-                pleasantness_value = parseFloat(objSentimentVal.val[0]);
+            attention_value = parseFloat(objSentimentVal.val[1]),
+            pleasantness_value = parseFloat(objSentimentVal.val[0]);
             if (index > 0) {
                 // if the previous word is in the list of negators, negate the current word
                 if (negs[text[index - 1]]) {
@@ -437,7 +471,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @return {(object | null)} senticNet5 object or null if no such object exists
 *    @borrows sentic5Data from background-load-objects.js
 */
- function makeWordCombinations(numberOfWords, index, text) {
+function makeWordCombinations(numberOfWords, index, text) {
     // loop through all possible combinations of words 
     for (let i = numberOfWords - 1; i >= 0; i--) {
         // return the largest possible combination of words 
@@ -474,14 +508,14 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @borrows attentionDescriptors from background-load-objects.js
 *    @borrows pleasantnessDescriptors from background-load-objects.js
 */
- function getValueDescriptor(value, scoreType) {
+function getValueDescriptor(value, scoreType) {
 
     let outcomes = [];
     // select the correct array based off the provided scoreType
     if (scoreType == "sentiment") outcomes = sentimentDescriptors;
     else if (scoreType == "attention") outcomes = attentionDescriptors;
     else if (scoreType == "pleasantness") outcomes = pleasantnessDescriptors;
-    else {} // scoreType was not valid
+    else {}// scoreType was not valid
     // return string based on value
     if (value >= 70) return outcomes[6];
     else if (value >= 30) return outcomes[5];
@@ -498,7 +532,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @param {float} rangeStart, rangeEnd - current range value is in- rangeStart <= value <= rangeEnd
 *    @return {float} - HSL hue value in [0, 120]
 */
- function mapValueToColor(value, rangeStart, rangeEnd) {
+function mapValueToColor(value, rangeStart, rangeEnd) {
     // change value to map between 0 and 1 
     value = mapValueToRange(value, rangeStart, rangeEnd, 0, 1);
     // max red and green saturations from HSV
@@ -514,7 +548,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @param {float} startNew, endNew - new value range
 *    @return {float} - adjusted value to new range
 */
- function mapValueToRange(value, startOld, endOld, startNew, endNew) {
+function mapValueToRange(value, startOld, endOld, startNew, endNew) {
     let res = startNew + ((endNew - startNew) / (endOld - startOld)) * (value - startOld);
     if (res > endNew) return endNew;
     else if (res < startNew) return startNew;
@@ -531,7 +565,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @borrows irregular from background-load-objects.js 
 *    @borrows uncountable from background-load-objects.js 
 */
- function pluralize(inputWord) {
+function pluralize(inputWord) {
     // if singular and plural are the same, return 
     if (uncountable.indexOf(inputWord.toLowerCase()) >= 0) return inputWord;
     // check if word is irregular, if so, replace with regex and return 
@@ -555,7 +589,7 @@ function analyzeTextSentimentAFINN111(text, type) {
 *    @borrows irregular from background-load-objects.js 
 *    @borrows uncountable from background-load-objects.js 
 */
- function singularize(inputWord) {
+function singularize(inputWord) {
     // if singular and plural are the same, return 
     if (uncountable.indexOf(inputWord.toLowerCase()) >= 0)
       return inputWord;
@@ -584,43 +618,43 @@ function HSLToRGB(hue, saturation, lightness) {
 
   if (hue == undefined ){
     return [0, 0, 0];
-  }
-  let chroma = (1 - Math.abs((2 * lightness) - 1)) * saturation;
-  let huePrime = Math.floor(hue / 60);
-  let secondComponent = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
-  let red, green, blue;
+    }
+    let chroma = (1 - Math.abs((2 * lightness) - 1)) * saturation;
+    let huePrime = Math.floor(hue / 60);
+    let secondComponent = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+    let red, green, blue;
 
-  if (huePrime === 0 ){
-    red = chroma;
-    green = secondComponent;
-    blue = 0;
-  } else if (huePrime === 1 ){
-    red = secondComponent;
-    green = chroma;
-    blue = 0;
-  } else if (huePrime === 2 ){
-    red = 0;
-    green = chroma;
-    blue = secondComponent;
-  } else if (huePrime === 3 ){
-    red = 0;
-    green = secondComponent;
-    blue = chroma;
-  } else if (huePrime === 4 ){
-    red = secondComponent;
-    green = 0;
-    blue = chroma;
-  } else if (huePrime === 5 ){
-    red = chroma;
-    green = 0;
-    blue = secondComponent;
-  }
+    if (huePrime === 0 ){
+        red = chroma;
+        green = secondComponent;
+        blue = 0;
+    } else if (huePrime === 1 ){
+        red = secondComponent;
+        green = chroma;
+        blue = 0;
+    } else if (huePrime === 2 ){
+        red = 0;
+        green = chroma;
+        blue = secondComponent;
+    } else if (huePrime === 3 ){
+        red = 0;
+        green = secondComponent;
+        blue = chroma;
+    } else if (huePrime === 4 ){
+        red = secondComponent;
+        green = 0;
+        blue = chroma;
+    } else if (huePrime === 5 ){
+        red = chroma;
+        green = 0;
+        blue = secondComponent;
+    }
 
-  let lightnessAdjustment = lightness - (chroma / 2);
-  red += lightnessAdjustment;
-  green += lightnessAdjustment;
-  blue += lightnessAdjustment;
+    let lightnessAdjustment = lightness - (chroma / 2);
+    red += lightnessAdjustment;
+    green += lightnessAdjustment;
+    blue += lightnessAdjustment;
 
-  return [Math.round(red * 255), Math.round(green * 255), Math.round(blue * 255)];
+    return [Math.round(red * 255), Math.round(green * 255), Math.round(blue * 255)];
 }
 

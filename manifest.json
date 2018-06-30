@@ -1,7 +1,9 @@
 {
     "name": "Sentitude Sentiment Analysis",
+    "short_name": "Sentitude",
     "version": "1.0",
     "description": "A NLP extension that shows the sentiment of a page and selection",
+    "author": "Christian Broms",
     "background": {
         "scripts": ["scripts/background-load-objects.js", "scripts/porter-stemmer.js", "scripts/background.js"]
     },
@@ -25,6 +27,15 @@
     ],
     "icons": {
         "128": "assets/icon128.png"
+    },
+    "commands": {
+          "analyze-selected-text": {
+            "suggested_key": {
+              "default": "Ctrl+Shift+A",
+              "mac": "Command+Shift+A"
+            },
+            "description": "Get sentiment of selected text"
+        }
     },
     "manifest_version": 2
 }
