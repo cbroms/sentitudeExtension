@@ -6,8 +6,8 @@ chrome.storage.sync.get(['AFINN_WEIGHT'], (result) => {
     document.getElementById("weight-afinn").value = result.AFINN_WEIGHT;
 }); 
 
-chrome.storage.sync.get(['SENTICNET_WEIGHT'], (result) => {
-    document.getElementById("weight-sentic").value = result.SENTICNET_WEIGHT;
+chrome.storage.sync.get(['SENTIC_WEIGHT'], (result) => {
+    document.getElementById("weight-sentic").value = result.SENTIC_WEIGHT;
 }); 
 
 // set checkboxes based off of stored values 
@@ -63,7 +63,7 @@ let enableAfinn = () => {
 // save the weight inputs 
 let saveInput = () => {
     chrome.storage.sync.set({AFINN_WEIGHT: document.getElementById("weight-afinn").value});
-    chrome.storage.sync.set({SENTICNET_WEIGHT: document.getElementById("weight-sentic").value});
+    chrome.storage.sync.set({SENTIC_WEIGHT: document.getElementById("weight-sentic").value});
 };
 
 // change weight inputs when options are disabled and enabled 

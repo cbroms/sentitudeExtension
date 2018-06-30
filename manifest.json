@@ -23,6 +23,9 @@
         "http://*/",
         "https://*/"
     ],
+    "icons": {
+        "128": "icons/icon128.png"
+    },
     "web_accessible_resources": ["popup-script.js", "content.js"],
     "manifest_version": 2
 }

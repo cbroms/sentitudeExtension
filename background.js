@@ -9,7 +9,6 @@
 *
 */
 
-
 // the page's overall sentiment 
 let resOverall; 
 // a user's selection sentiment
@@ -46,7 +45,6 @@ chrome.runtime.onInstalled.addListener(() => {
     "id": "context" + "selection"
     });  
 });
-
 
 /**
 *   get the average of AFINN and SenticNet computed sentiments 
@@ -151,7 +149,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
-        
+
+        // add the sentiment value to the icon
+        chrome.browserAction.setBadgeText({text: String(resOverall.sentimentMapped)});
+        // change HSL color to RBG
+        let rgbColor = HSLToRGB(resOverall.sentimentColor, 1, 0.4);
+        // change the background color of the number
+        chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
     }
     else if (request.type == "selectionClick") {
         // message contains a paragraph click
@@ -565,3 +569,56 @@ function analyzeTextSentimentAFINN111(text, type) {
     }
     return inputWord;
 }
+
+/**
+*    returns the RGB value of a given HSL value - from npm hsl-to-rgb
+*    based on http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
+*    @param {float} hue - [0, 360)
+*    @param {float} saturation - [0, 1]
+*    @param {float} lightness - [0, 1]
+*    @return {Array} - [red, green, blue]
+*/
+function HSLToRGB(hue, saturation, lightness) {
+
+  if (hue == undefined ){
+    return [0, 0, 0];
+  }
+  let chroma = (1 - Math.abs((2 * lightness) - 1)) * saturation;
+  let huePrime = Math.floor(hue / 60);
+  let secondComponent = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  let red, green, blue;
+
+  if (huePrime === 0 ){
+    red = chroma;
+    green = secondComponent;
+    blue = 0;
+  } else if (huePrime === 1 ){
+    red = secondComponent;
+    green = chroma;
+    blue = 0;
+  } else if (huePrime === 2 ){
+    red = 0;
+    green = chroma;
+    blue = secondComponent;
+  } else if (huePrime === 3 ){
+    red = 0;
+    green = secondComponent;
+    blue = chroma;
+  } else if (huePrime === 4 ){
+    red = secondComponent;
+    green = 0;
+    blue = chroma;
+  } else if (huePrime === 5 ){
+    red = chroma;
+    green = 0;
+    blue = secondComponent;
+  }
+
+  let lightnessAdjustment = lightness - (chroma / 2);
+  red += lightnessAdjustment;
+  green += lightnessAdjustment;
+  blue += lightnessAdjustment;
+
+  return [Math.round(red * 255), Math.round(green * 255), Math.round(blue * 255)];
+}
+
