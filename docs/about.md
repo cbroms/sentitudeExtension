@@ -1,4 +1,4 @@
-# About Sentitude
+# About
 
 Sentitude is a Chrome Extension that performs sentiment analysis on webpages and selections. 
 
@@ -60,11 +60,14 @@ It is worth noting that this approach can be easily broken. For example, the sen
 ```
 I don't want to go.
 ```
-Would result in a positive score. This is why Sentitude includes a list of negators, which are compared against the tokens in a sentence. If one is found, in this case `don't`, the value of the following token, `want to go`, is inverted. The more negative sentiment value results. 
-
+Would result in a positive score. This is why Sentitude includes a list of negators, which are compared against the tokens in a sentence. If one is found, in this case `don't`, the value of the following token, `want to go`, is inverted. Adding the token values would look like the following:
+```
+[I] + [don't] + -[want to go]
+``` 
 In addition, not all tenses of words are included in the dictionaries. For example, given the token `betrayed`, no value would be present. For this reason, Sentitude makes use of the [Porter Stemming Algorithm](https://tartarus.org/martin/PorterStemmer/) to normalize words. This way, literal words that are not in the dictionaries can still be identified by removing their suffixes and using their stems. 
 
 ## Licence 
 
 Sentitude is licenced under the MIT Licence. 
 
+Copyright (©) 2018 Christian Broms
