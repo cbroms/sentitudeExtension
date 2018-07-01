@@ -44,6 +44,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         storage.set({SENTIC_WEIGHT: 0.6});
         storage.set({SHOW_SENTIMENT_FOR_PAGES: false});
         storage.set({SHOW_SENTIMENT_FOR_SELECTION: false});
+        storage.set({SHOW_SENTIMENT_ON_ICON: true});
         storage.set({COLOR_PAGES: false});
         storage.set({COLOR_SELECTION: true}); 
     } else {
@@ -171,12 +172,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type == "pageScan") {
         // message contains a page scan 
         resOverall = getSentimentAverage(request.pageContents, "pageScan", (res) => {
-            // add the sentiment value to the icon
-            chrome.browserAction.setBadgeText({text: String(res.sentimentMapped)});
-            // change HSL color to RBG
-            let rgbColor = HSLToRGB(res.sentimentColor, 1, 0.4);
-            // change the background color of the number
-            chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
+
+            // check if the user wants to show the sentiment value on the icon badge 
+            storage.get(['SHOW_SENTIMENT_ON_ICON'], (result) => { 
+                if (result.SHOW_SENTIMENT_ON_ICON) {
+                    // add the sentiment value to the icon
+                    chrome.browserAction.setBadgeText({text: String(res.sentimentMapped)});
+                    // change HSL color to RBG
+                    let rgbColor = HSLToRGB(res.sentimentColor, 1, 0.4);
+                    // change the background color of the number
+                    chrome.browserAction.setBadgeBackgroundColor({color: [rgbColor[0], rgbColor[1], rgbColor[2], 255] });
+                }
+            });
 
             // send result to popup
             chrome.extension.onConnect.addListener((port) => {

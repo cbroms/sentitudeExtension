@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-<!--
+<head>
+    <!--
       _________  ____________________  _____  ____
      / __/ __/ |/ /_  __/  _/_  __/ / / / _ \/ __/
      \ \/ _//    / / / _/ /  / / / /_/ / // / _/  
@@ -10,8 +11,7 @@
     @author Christian Broms 
     @license MIT license 
 
--->
-<head>
+    -->
     <link href="https://fonts.googleapis.com/css?family=Chivo:300,400,700i|Source+Code+Pro" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="styles.css">
     <link rel="stylesheet" type="text/css" href="../scripts/injected/content.css">
@@ -29,7 +29,7 @@
             <div class="section-heading">Display Options</div>
             <hr> 
             <div class="sentitude-tooltip sub-title">
-                Show Individual Sentiment 
+                Show Individual Words' Sentiment 
                 <div class="sentitude-tooltiptext"> 
                     Display the sentiment values of all words and give each a color representation on the page.
                 </div>
@@ -52,7 +52,19 @@
             <label for="color-all">For All Pages</label> <br>
             <input type="checkbox" id="color-selection" checked="true">
             <label for="color-selection">For My Selections</label>
+    
         </div>
+        <hr> 
+            <div class="sentitude-tooltip sub-title">
+               Display Page Sentiment
+               <div class="sentitude-tooltiptext">
+                Show a page's sentiment value on the Sentitude icon in the Chrome toolbar.
+               </div>
+           </div>
+           <div class="section-options">
+            <input type="checkbox" id="sent-icon">
+            <label for="sent-icon">On Icon</label> <br>
+         </div>   
     </div>
 
     <div class="section">
@@ -105,8 +117,8 @@
 
     <div class="footer">
         Sentitude Version <span id="version">0.0</span> &mdash;
-        View the <a href="https://github.com/CBR0MS/nlpExtension">Source Code on GitHub</a> &mdash;
-        <a href="#">About</a>
+        View the <a id="github" href="">Source Code on GitHub</a> &mdash;
+        <a id="help" href="">Help</a> &mdash; <a id="about" href="">About</a>
     </div>
 
 </div>

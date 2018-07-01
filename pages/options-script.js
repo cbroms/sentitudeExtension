@@ -14,11 +14,25 @@
 // use synced storage, fallback on local storage if sync is disabled
 const storage = chrome.storage.sync;
 
+// on dom load, 
+document.addEventListener("DOMContentLoaded", (event) => {
+
 // update the extension version number
 document.getElementById("version").innerHTML = chrome.runtime.getManifest().version;
-
 // get the latest icon
 document.getElementById("icon").src = "../" + chrome.runtime.getManifest().icons[128];
+
+// get extension information for links
+fetch('../extension-information.json')
+.then((response) => response.json())
+.then((json) => {
+        // get the latest github link
+        document.getElementById("github").href = json.github_url;
+        // get the latest help link 
+        document.getElementById("help").href = json.help_url;
+        // get the latest about link 
+        document.getElementById("about").href = json.about_url;
+    });
 
 // set the weights to their stored values
 storage.get(['AFINN_WEIGHT'], (result) => {
@@ -50,6 +64,10 @@ storage.get(['SHOW_SENTIMENT_FOR_SELECTION'], (result) => {
     document.getElementById("sent-selection").checked = result.SHOW_SENTIMENT_FOR_SELECTION;
 }); 
 
+storage.get(['SHOW_SENTIMENT_ON_ICON'], (result) => {
+    document.getElementById("sent-icon").checked = result.SHOW_SENTIMENT_ON_ICON;
+}); 
+
 storage.get(['COLOR_PAGES'], (result) => {
     document.getElementById("color-all").checked = result.COLOR_PAGES;
 }); 
@@ -67,6 +85,11 @@ document.getElementById("sent-all").addEventListener('change', () => {
 document.getElementById("sent-selection").addEventListener('change', () => {
     if (document.getElementById("sent-selection").checked) storage.set({SHOW_SENTIMENT_FOR_SELECTION: true});
     else storage.set({SHOW_SENTIMENT_FOR_SELECTION: false}); 
+});
+
+document.getElementById("sent-icon").addEventListener('change', () => {
+    if (document.getElementById("sent-icon").checked) storage.set({SHOW_SENTIMENT_ON_ICON: true});
+    else storage.set({SHOW_SENTIMENT_ON_ICON: false}); 
 });
 
 document.getElementById("color-all").addEventListener('change', () => {
@@ -219,4 +242,16 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     setTimeout(() => {
         document.getElementById("saved").classList.add("hidden");
     }, 2500);
+
+    for (key in changes) {
+        // if the user disabled the icon badge, get rid of any text in it 
+        if (key == 'SHOW_SENTIMENT_ON_ICON') {
+            if (!changes[key].newValue) {
+                chrome.browserAction.setBadgeText({text: ""});
+            }
+        }
+    }
 });
+
+});
+

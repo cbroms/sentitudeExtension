@@ -13,6 +13,9 @@
 *   "CLOSE_POPUP" - close the popup window
 */
 
+// on dom load, 
+document.addEventListener("DOMContentLoaded", (event) => {
+
 // initial set up of page- hide dropdowns and color fields and text, show prompts
 Array.from(document.getElementsByClassName("head-colored")).forEach((element) => element.classList.toggle("hidden"));
 Array.from(document.getElementsByClassName("head-title")).forEach((element) => element.classList.toggle("hidden"));
@@ -182,3 +185,6 @@ port.onMessage.addListener((msg) => {
     }
 }
 });
+
+});
+
