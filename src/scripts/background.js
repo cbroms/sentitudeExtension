@@ -77,8 +77,6 @@ let getSentimentAverage = (data, type, callback) => {
             senticWt = result.SENTIC_WEIGHT; 
             // calculate a weighted mean of the data from AFINN-111 and SenticNet 5
             let weightedMean = (afinnData.sentiment * afinnWt + senticData.sentimentMapped * senticWt) / (1);
-            
-            console.log(res);
             res.sentimentMapped = Math.round(weightedMean);
             // replace the old descriptor
             res.descriptorSentiment = getValueDescriptor(weightedMean, "sentiment"),
@@ -396,6 +394,9 @@ function analyzeTextSentimentSenticNet5(text, type) {
             }
         }());
         // now, if there is a dictionary value, we have it 
+        // if the word is "of", "the", or "to", ignore it 
+        if (obj == "of" || obj == "the" || obj == "to") objSentimentVal = null;
+        
         // push the found word or combination to the ordered list (can be null too)
         ordered.push(objSentimentVal);
 
