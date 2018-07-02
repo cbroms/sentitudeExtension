@@ -4,7 +4,7 @@ Sentitude is a Chrome Extension that performs sentiment analysis on webpages and
 
 ## Technologies 
 
-Sentitude makes use of two dictionaries when analyzing pages- [SenticNet 5](http://sentic.net/about/) and [AFINN-111](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010). SenticNet 5 is the latest, released in 2018 ([read the paper here](http://sentic.net/senticnet-5.pdf)) and provides 100,000 concepts, each of which has been assigned a number of values, notably polarity, attention value, pleasantness, sensitivity, aptitude value, and a number of other semantics values. For example, the entry `betray` in the SenticNet 5 dictionary looks like this: 
+Sentitude makes use of two dictionaries when analyzing pages- [SenticNet 5](http://sentic.net/about/) and [AFINN-111](http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010). SenticNet 5 is the latest, released in 2018 ([read the paper here](http://sentic.net/senticnet-5.pdf)) and provides 100,000 concepts, each of which has been assigned a number of values, notably polarity, attention value, pleasantness, sensitivity, aptitude value, and a number of other semantics values. For example, the entry for `betray` in the SenticNet 5 dictionary looks like this: 
 ```json
 {
     "betray": [
@@ -26,7 +26,7 @@ Sentitude makes use of two dictionaries when analyzing pages- [SenticNet 5](http
 ```
 SenticNet 5 was created using a [recurrent neural network](https://en.wikipedia.org/wiki/Recurrent_neural_network) and the ["bag of concepts"](http://sentic.net/jumping-nlp-curves.pdf) model. The polarities of the words are inferred from a number of factors, most importantly the concept conveyed by the sentence and its collection of words. 
 
-In addition, Sentitude makes use of the AFINN-111 dictionary. This dictionary is older, released in 2011 and containing 2,477 entries. Unlike the SenticNet dictionary, AFINN-111 was created manually by assigning a polarity value to each word or phrase based off of a number of factors. You can find out more by [reading the paper here](https://arxiv.org/pdf/1103.2903.pdf). The entry `betray` in the AFINN-111 dictionary looks like this:
+In addition, Sentitude makes use of the AFINN-111 dictionary. This dictionary is older, released in 2011 and containing 2,477 entries. Unlike the SenticNet dictionary, AFINN-111 was created manually by assigning a polarity value to each word or phrase based off of a number of factors. You can find out more by [reading the paper here](https://arxiv.org/pdf/1103.2903.pdf). The entry for `betray` in the AFINN-111 dictionary looks like this:
 ```json
 {
     "betray":  -3,
@@ -52,7 +52,7 @@ The single word `can` was not in the dictionary, so it is given a token value of
 ```
 0.049 + 0 + 0.121 + 0.847 = 1.017 / 4 = 0.25425
 ``` 
-Thus, this sentence has a raw polarity of 0.25, which is then scaled on the range [-100, 100] and averaged with the polarity value obtained by following a similar process with the AFINN-111 dictionary. The average of the two is weighted more heavily towards the SenticNet dictionary by default, but this can be changed in the Sentitude options panel. The final sentiment of this sentence after averaging would be around `+23`, a rather positive score. 
+This sentence has a raw polarity of 0.25, which is then scaled on the range [-100, 100] and averaged with the polarity value obtained by following a similar process with the AFINN-111 dictionary. The average of the two is weighted more heavily towards the SenticNet dictionary by default, but this can be changed in the Sentitude options panel. The final sentiment of this sentence after averaging would be `+53`, a very positive score. 
 
 #### Negation & Lemmatization
 
@@ -65,6 +65,17 @@ Would result in a positive score. This is why Sentitude includes a list of negat
 [I] + [don't] + -[want to go]
 ``` 
 In addition, not all tenses of words are included in the dictionaries. For example, given the token `betrayed`, no value would be present. For this reason, Sentitude makes use of the [Porter Stemming Algorithm](https://tartarus.org/martin/PorterStemmer/) to normalize words. This way, literal words that are not in the dictionaries can still be identified by removing their suffixes and using their stems. 
+
+#### Other Issues
+
+The summation of tokens approach to sentiment analysis is by no means perfect, but it is fairly accurate. It tends to work best in comment sections and social media posts, where people often try to convey a very clear opinion on something. However, even in fairly unbiased news articles it can detect a slight polarity difference, just by an author's word choices. 
+
+A major limiting factor is inability to detect sentiment given a certain context. For example, the word `apple` could be used in pretty much any context and carry completely a different meaning (ex. `What a delicous apple!` and `He was a real bad apple`.) In these cases Sentitude cannot accurately predict a sentiment; it just identifies tokens that are included in the two dictionaries and comes up with a less accurate number. 
+
+## Privacy
+
+Sentitude is completely self-contained; it gets no information in and sends no information out. None of generated sentiment values are saved. It stores and syncs just *nine* settings across your devices. If you don't want Sentitude to sync anything, navigate to [chrome://settings](chrome://settings), click `Sync`, and disable `Extensions`. 
+
 
 ## Licence 
 
