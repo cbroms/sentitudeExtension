@@ -77,8 +77,8 @@ A major limiting factor is inability to detect sentiment given a certain context
 Sentitude is completely self-contained; it gets no information in and sends no information out. None of generated sentiment values are saved. It stores and syncs just *nine* settings across your devices. If you don't want Sentitude to sync anything, navigate to [chrome://settings](chrome://settings), click `Sync`, and disable `Extensions`. 
 
 
-## Licence 
+## License 
 
-Sentitude is licenced under the MIT Licence. 
+Sentitude is licenced under the MIT License. 
 
 Copyright (©) 2018 Christian Broms

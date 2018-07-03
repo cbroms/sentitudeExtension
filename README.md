@@ -2,7 +2,7 @@
 
 Sentitude is a Chrome Extension that performs sentiment analysis on webpages and selections. It is lightweight and written in vanilla javascript with no dependencies, and makes no API calls. 
 
-![alt text](docs/assets/selection.gif "Making a Selection")
+![alt text](docs/assets/marquee_promo.png "Sentitude")
 
 ## Contents
 - [Technologies](#technologies)
@@ -134,8 +134,8 @@ In this section, you can edit which dictionaries are used to calculate the senti
 
 Sentitude is completely self-contained; it gets no information in and sends no information out. None of generated sentiment values are saved. It stores and syncs just *nine* settings across your devices. If you don't want Sentitude to sync anything, navigate to [chrome://settings](chrome://settings), click `Sync`, and disable `Extensions`. 
 
-## Licence 
+## License 
 
-Sentitude is licenced under the MIT Licence. 
+Sentitude is licenced under the MIT License. 
 
 Copyright (©) 2018 Christian Broms
